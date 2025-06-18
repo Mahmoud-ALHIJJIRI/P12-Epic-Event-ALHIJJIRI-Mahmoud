@@ -4,9 +4,13 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+sqlalchemy = "*"
+psycopg2-binary = "*"
+python-dotenv = "*"
+click = "*"
+rich = "*"
 
 [dev-packages]
 
 [requires]
 python_version = "3.13"
-python_full_version = "3.13.3"
