@@ -1,10 +1,8 @@
 from sqlalchemy import Column, Integer, String, Enum, DateTime, ForeignKey, Boolean
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime, UTC
 import enum
-
-Base = declarative_base()
+from .database import Base
 
 
 # Define role types using Python Enum
@@ -47,7 +45,7 @@ class Client(Base):
     commercial_id = Column(Integer, ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
     # Relationships
     commercial = relationship("User", back_populates="clients")
-    contracts = relationship("Contract", back_populates="commercial", passive_deletes=True)
+    contracts = relationship("Contract", back_populates="client", passive_deletes=True)
     events = relationship("Event", back_populates="client")
 
 

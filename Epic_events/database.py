@@ -1,15 +1,15 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-import os
-from dotenv import load_dotenv
+from .config import DATABASE_URL  # Now cleanly imported from config
 
-# Load variables from .env
-load_dotenv()
-
-# Read the DATABASE_URL variable
-DATABASE_URL = os.getenv("DATABASE_URL")
-
-# Create SQLAlchemy engine and session
+# Initialize engine and session
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
+
+# Base class for ORM models
 Base = declarative_base()
+
+
+def init_db():
+    from .models import User, Client, Contract, Event  # Ensure model imports for table creation
+    Base.metadata.create_all(bind=engine)

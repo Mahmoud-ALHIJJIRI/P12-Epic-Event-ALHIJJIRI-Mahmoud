@@ -9,6 +9,8 @@ psycopg2-binary = "*"
 python-dotenv = "*"
 click = "*"
 rich = "*"
+argon2-cffi = "*"
+pyjwt = "*"
 
 [dev-packages]
 
