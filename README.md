@@ -103,7 +103,6 @@ Commercial	Create/update their clients and contracts, create events
 Gestion	Full access: manage users, contracts, events
 Support	Can view/update only the events assigned to them
 
-
 ⸻
 
 🧪 Example Usage
