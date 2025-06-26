@@ -1,6 +1,7 @@
 import click
 from Epic_events.service.user_service import (register_user_logic, login_user,
-                                              get_logged_user_info, list_users_logic)
+                                              get_logged_user_info, list_users_logic,
+                                              logout_user)
 from Epic_events.auth.permissions import role_required
 
 
@@ -10,6 +11,12 @@ from Epic_events.auth.permissions import role_required
 def login(email, password):
     """Login user."""
     login_user(email, password)
+
+
+@click.command()
+def logout():
+    """Logout User"""
+    logout_user()
 
 
 @click.command()

@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from click import ClickException
+from sqlalchemy import delete
 from sqlalchemy.exc import IntegrityError
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
@@ -8,6 +9,7 @@ import jwt
 import click
 from rich.table import Table
 from rich.console import Console
+from pathlib import Path
 
 
 from sqlalchemy.orm import Session
@@ -18,6 +20,7 @@ from Epic_events.auth.utils import save_token, load_token, decode_token, get_cur
 
 ph = PasswordHasher()
 ALGORITHM = "HS256"
+TOKEN_FILE = Path.home() / ".epic_crm_token"
 
 
 # -------------------------
@@ -112,6 +115,21 @@ def get_logged_in_user() -> User:
     if not user:
         raise ClickException("❌ Logged-in user not found in database.")
     return user
+
+
+# -------------------------
+# 👤 Logged in User
+# -------------------------
+def logout_user():
+    """Logs out the current user by deleting the stored JWT token."""
+    if not TOKEN_FILE.exists():
+        raise Exception("❌ No user is currently logged in.")
+
+    try:
+        TOKEN_FILE.unlink()
+        print("✅ Successfully logged out.")
+    except Exception as e:
+        raise Exception(f"❌ Error while logging out: {str(e)}")
 
 
 # -------------------------
