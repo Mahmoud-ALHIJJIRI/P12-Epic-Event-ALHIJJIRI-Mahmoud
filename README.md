@@ -25,24 +25,29 @@ Epic Events CRM is a command-line interface application designed to streamline h
 
 ## 📁 Project Structure
 
+## 📁 Project Structure
+
+<pre>
 Epic_events/
-├── alembic/                  # DB migrations
-├── alembic.ini               # Alembic config
-├── auth/                     # Authentication logic
+├── alembic/                 # DB migrations
+├── alembic.ini              # Alembic config
+├── auth/                    # Authentication logic
 │   ├── service.py
 │   ├── token.py
 │   └── permissions.py
-├── service/                  # Business logic (user, client, contract, event)
+├── service/                 # Business logic (user, client, contract, event)
 │   ├── user_service.py
 │   ├── client_service.py
 │   ├── contract_service.py
 │   └── event_service.py
-├── cli/                      # CLI commands
-├── database.py               # DB connection/session
-├── models.py                 # SQLAlchemy models
-├── main.py                   # CLI entry point
-├── .epic_crm_token           # Local token storage (hidden)
-└── README.md                 # You’re here
+├── cli/                     # CLI commands
+├── database.py              # DB connection/session
+├── models.py                # SQLAlchemy models
+main.py                      # CLI entry point
+.epic_crm_token              # Local token storage (hidden)
+README.md                    # You’re here
+</pre>
+
 
 ---
 
