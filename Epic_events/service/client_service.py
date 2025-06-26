@@ -108,4 +108,3 @@ def list_clients_logic():
         console.print(f"[red]❌ Error: {e}[/red]")
     finally:
         session.close()
-
