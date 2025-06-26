@@ -1,6 +1,5 @@
 import click
-from rich.table import Table
-from rich.console import Console
+
 
 from Epic_events.auth.permissions import role_required
 from Epic_events.service.client_service import (register_client_logic, list_clients_logic,

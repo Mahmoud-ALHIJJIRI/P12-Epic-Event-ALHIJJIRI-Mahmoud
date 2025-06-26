@@ -6,7 +6,6 @@ from datetime import datetime, UTC
 
 from Epic_events.database import SessionLocal
 from Epic_events.models import Client
-from Epic_events.auth.permissions import role_required
 from Epic_events.service.user_service import get_logged_in_user
 
 
