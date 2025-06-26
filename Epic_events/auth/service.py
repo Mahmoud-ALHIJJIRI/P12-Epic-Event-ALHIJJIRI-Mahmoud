@@ -1,14 +1,17 @@
 from datetime import datetime, timedelta, timezone
+from typing import Optional
+from click import ClickException
 from sqlalchemy.exc import IntegrityError
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 import jwt
 import click
 
+from sqlalchemy.orm import Session
 from Epic_events.config import SECRET_KEY
 from Epic_events.database import SessionLocal
-from Epic_events.models import User, UserRole
-from .utils import save_token, load_token, decode_token
+from Epic_events.models import User, UserRole, Client
+from .utils import save_token, load_token, decode_token, get_current_user
 
 ph = PasswordHasher()
 ALGORITHM = "HS256"
@@ -83,6 +86,29 @@ def login_user(email, password):
         click.echo(f"❌ Failed to write token to file: {str(e)}")
     finally:
         session.close()
+
+
+# -------------------------
+# 👤 Logged in User
+# -------------------------
+def get_logged_in_user() -> User:
+    """
+    Returns the SQLAlchemy User object corresponding to the logged-in user,
+    based on the JWT token stored in ~/.epic_crm_token.
+    """
+    payload = get_current_user()
+    user_id = payload.get("sub")
+
+    if not user_id:
+        raise ClickException("❌ Token is missing user ID (sub claim).")
+
+    session: Session = SessionLocal()
+    user: Optional[User] = session.get(User, int(user_id))
+    session.close()
+
+    if not user:
+        raise ClickException("❌ Logged-in user not found in database.")
+    return user
 
 
 # -------------------------

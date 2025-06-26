@@ -1,5 +1,7 @@
+# Import libraries
 import jwt
-import os
+
+# Internal imports
 from pathlib import Path
 from jwt import ExpiredSignatureError, InvalidTokenError
 from Epic_events.config import SECRET_KEY

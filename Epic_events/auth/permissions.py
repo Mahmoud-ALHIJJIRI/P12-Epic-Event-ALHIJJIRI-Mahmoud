@@ -11,7 +11,7 @@ def role_required(allowed_roles):
                 user = get_current_user()
                 user_role = user.get("role")
                 if user_role not in allowed_roles:
-                    raise Exception(f"Permission denied: role '{user_role}' is not allowed.")
+                    raise Exception(f"Permission denied:'{user_role}' users are not allowed to this action.")
             except Exception as e:
                 click.echo(f"❌ Access denied: {e}")
                 return
