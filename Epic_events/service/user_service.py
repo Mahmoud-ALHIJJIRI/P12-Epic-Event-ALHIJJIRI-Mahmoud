@@ -192,3 +192,25 @@ def list_users_logic():
         console.print(f"[red]❌ Error: {e}[/red]")
     finally:
         session.close()
+
+
+def delete_user_by_id(user_id: int):
+    """Deletes a user by their ID. Returns True if deleted, False if not found."""
+    session: Session = SessionLocal()
+
+    try:
+        user = session.get(User, user_id)
+
+        if not user:
+            return False
+
+        session.delete(user)
+        session.commit()
+        return True
+
+    except Exception as e:
+        session.rollback()
+        raise e
+
+    finally:
+        session.close()

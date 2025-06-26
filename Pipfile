@@ -11,6 +11,7 @@ click = "*"
 rich = "*"
 argon2-cffi = "*"
 pyjwt = "*"
+alembic = "*"
 
 [dev-packages]
 

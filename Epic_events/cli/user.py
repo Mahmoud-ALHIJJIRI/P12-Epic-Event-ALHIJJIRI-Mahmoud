@@ -1,7 +1,7 @@
 import click
 from Epic_events.service.user_service import (register_user_logic, login_user,
                                               get_logged_user_info, list_users_logic,
-                                              logout_user)
+                                              logout_user, delete_user_by_id)
 from Epic_events.auth.permissions import role_required
 
 
@@ -29,6 +29,21 @@ def register_user():
     role = click.prompt("Role", type=click.Choice(['commercial', 'gestion', 'support']))
 
     register_user_logic(name, email, password, role)
+
+
+@click.command()
+@role_required(["gestion"])
+def delete_user():
+    """Delete a user by ID (gestion only)."""
+    try:
+        user_id = click.prompt("Enter the ID of the user to delete", type=int)
+        deleted = delete_user_by_id(user_id)
+        if deleted:
+            click.echo(f"✅ User with ID {user_id} was successfully deleted.")
+        else:
+            click.echo(f"⚠️ No user found with ID {user_id}.")
+    except Exception as e:
+        click.echo(f"❌ Error deleting user: {str(e)}")
 
 
 @click.command()
