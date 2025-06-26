@@ -1,6 +1,15 @@
 import click
-from Epic_events.auth.service import register_user, login_user, get_logged_user_info
+from Epic_events.service.user_service import (register_user_logic, login_user,
+                                              get_logged_user_info, list_users_logic)
 from Epic_events.auth.permissions import role_required
+
+
+@click.command()
+@click.option('--email', prompt=True)
+@click.option('--password', prompt=True, hide_input=True)
+def login(email, password):
+    """Login user."""
+    login_user(email, password)
 
 
 @click.command()
@@ -12,15 +21,14 @@ def register_user():
     password = click.prompt("Password", hide_input=True, confirmation_prompt=True)
     role = click.prompt("Role", type=click.Choice(['commercial', 'gestion', 'support']))
 
-    register_user(name, email, password, role)
+    register_user_logic(name, email, password, role)
 
 
 @click.command()
-@click.option('--email', prompt=True)
-@click.option('--password', prompt=True, hide_input=True)
-def login(email, password):
-    """Login user."""
-    login_user(email, password)
+@role_required(["commercial", "gestion", "support"])
+def list_users():
+    """List all users in the system."""
+    list_users_logic()
 
 
 @click.command()
