@@ -1,5 +1,5 @@
 import click
-from .user import register_user, login, whoami, list_users, logout, delete_user
+from .user import register_admin, register_user, login, whoami, list_users, logout, delete_user
 from .client import register_client, list_clients, list_my_clients
 
 
@@ -10,6 +10,7 @@ def cli():
 
 
 # Register subcommands to CLI (users)
+cli.add_command(register_admin, name="register_admin")
 cli.add_command(register_user, name="register_user")
 cli.add_command(login, name="login")
 cli.add_command(whoami, name="whoami")

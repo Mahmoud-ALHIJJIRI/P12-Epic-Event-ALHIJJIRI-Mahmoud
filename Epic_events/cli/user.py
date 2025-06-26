@@ -20,6 +20,17 @@ def logout():
 
 
 @click.command()
+def register_admin():
+    """Register Admin."""
+    name = click.prompt("Name")
+    email = click.prompt("Email")
+    password = click.prompt("Password", hide_input=True, confirmation_prompt=True)
+    role = 'gestion'
+
+    register_user_logic(name, email, password, role)
+
+
+@click.command()
 @role_required(["gestion"])
 def register_user():
     """Register a new user (gestion only)."""

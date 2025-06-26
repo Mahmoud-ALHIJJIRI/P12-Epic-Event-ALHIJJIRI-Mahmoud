@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from click import ClickException
-from sqlalchemy import delete
 from sqlalchemy.exc import IntegrityError
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
@@ -21,6 +20,34 @@ from Epic_events.auth.utils import save_token, load_token, decode_token, get_cur
 ph = PasswordHasher()
 ALGORITHM = "HS256"
 TOKEN_FILE = Path.home() / ".epic_crm_token"
+
+
+# -------------------------
+# 🧑‍💻 Register Admin
+# -------------------------
+def register_admin_logic(name, email, password, role):
+    """Handles logic for registering a new user."""
+    session = SessionLocal()
+
+    try:
+        user_role_enum = UserRole(role)
+    except ValueError:
+        click.echo(f"❌ Invalid role '{role}'.")
+        session.close()
+        return
+
+    hashed_pw = ph.hash(password)
+    user = User(name=name, email=email, password=hashed_pw, role=user_role_enum)
+
+    try:
+        session.add(user)
+        session.commit()
+        click.echo("✅ User registered successfully!")
+    except IntegrityError:
+        session.rollback()
+        click.echo("❌ Email already in use.")
+    finally:
+        session.close()
 
 
 # -------------------------
@@ -72,7 +99,7 @@ def login_user(email, password):
         return
 
     token_data = {
-        "sub": str(user.id),
+        "sub": str(user.user_id),
         "name": user.name,
         "role": user.role.value,
         "exp": datetime.now(timezone.utc) + timedelta(hours=2)
