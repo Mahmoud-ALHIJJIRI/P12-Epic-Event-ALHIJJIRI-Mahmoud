@@ -5,7 +5,10 @@ Absolutely! Here’s the full README.md you can copy and paste directly:
 
 # 🎉 Epic Events CRM CLI
 
-Epic Events CRM is a command-line interface application designed to streamline how Epic Events manages clients, contracts, and events. Built with Python, PostgreSQL, and a clean service architecture, this tool ensures secure access, proper user roles, and effective data management.
+Epic Events CRM is a command-line interface application designed to streamline 
+how Epic Events manages clients, contracts, and events. Built with Python, 
+PostgreSQL, and a clean service architecture, this tool ensures secure access, 
+proper user roles, and effective data management.
 
 ---
 
