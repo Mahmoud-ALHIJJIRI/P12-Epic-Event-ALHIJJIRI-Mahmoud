@@ -16,7 +16,6 @@ ALGORITHM = "HS256"
 # -------------------------
 def save_token(token: str):
     """Save the JWT token to the token file."""
-    print(f"[DEBUG] Writing token to {TOKEN_FILE.resolve()}")
     with open(TOKEN_FILE, "w", encoding="utf-8") as f:
         f.write(token.strip())
 
