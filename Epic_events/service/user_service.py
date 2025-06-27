@@ -243,23 +243,37 @@ def delete_user_by_id(user_id: int):
         session.close()
 
 
-def change_user_role_logic(user_id: int, role: str):
-    """Changes a user's role by ID. Returns True if modified, False if not found or error."""
-    session: Session = SessionLocal()
+def update_user_role_logic(user_id: int, role: str):
+    """
+    Changes a user's role by ID.
 
+    Args:
+        user_id: The ID of the user to modify.
+        role: The new role to assign.
+
+    Returns:
+        True if the user was updated successfully, False otherwise.
+    """
+    session: Session = SessionLocal()
     try:
+        # Retrieve the user object
         user = session.get(User, user_id)
         if not user:
+            # User not found
             return False
-
-        user.role = UserRole[role.upper()]  # e.g. 'sales' -> UserRole.SALES
+        # Update the user's role
+        user.role_enum = UserRole(role)  # e.g., 'commercial' -> UserRole.COMMERCIAL
+        # Commit the transaction
         session.commit()
+
         return True
 
     except Exception as e:
+        # If any error occurs (e.g., database connection issue, invalid role string for enum)
+        # roll back the transaction to leave the database in a clean state.
+        click.echo(f"An unexpected error occurred: {e}", err=True)
         session.rollback()
-        print(f"Error modifying user: {e}")
         return False
-
     finally:
+        # Ensure the session is always closed
         session.close()

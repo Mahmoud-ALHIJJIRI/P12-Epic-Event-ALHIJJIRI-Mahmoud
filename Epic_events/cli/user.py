@@ -1,7 +1,7 @@
 import click
 from Epic_events.service.user_service import (register_user_logic, login_user,
                                               get_logged_user_info, list_users_logic,
-                                              logout_user, delete_user_by_id, change_user_role_logic)
+                                              logout_user, delete_user_by_id, update_user_role_logic)
 from Epic_events.auth.permissions import role_required
 
 
@@ -59,27 +59,23 @@ def delete_user():
 
 @click.command()
 @role_required(["gestion"])  # Manager-only access
-def change_user_role():
+def update_user_role():
     """Change a user's role by prompting for ID and new role (Manager only)."""
-
     try:
         user_id = click.prompt("Enter user ID to modify", type=int)
     except click.Abort:
         click.echo("❌ Aborted.")
         return
 
-    role = click.prompt("Enter new role (manager/sales/support)", type=str).strip().lower()
+    # Prompt for the role using a case-insensitive choice
+    role = click.prompt("Enter new role", type=click.Choice(
+        ['commercial', 'gestion', 'support'], case_sensitive=False))
 
-    if role not in ["manager", "sales", "support"]:
-        click.echo("❌ Invalid role. Choose from: manager, sales, support.")
-        return
-
-    success = change_user_role_logic(user_id=user_id, role=role)
-
-    if success:
+    if update_user_role_logic(user_id=user_id, role=role):
         click.echo(f"✅ Role of user {user_id} updated to '{role}'.")
     else:
-        click.echo(f"❌ Failed to update role for user {user_id}. User may not exist.")
+        click.echo(f"❌ Failed to update role for user {user_id}. "
+                   f"The user may not exist or an error occurred.")
 
 
 @click.command()
