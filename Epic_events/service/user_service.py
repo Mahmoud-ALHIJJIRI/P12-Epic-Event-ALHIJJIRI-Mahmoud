@@ -241,3 +241,25 @@ def delete_user_by_id(user_id: int):
 
     finally:
         session.close()
+
+
+def change_user_role_logic(user_id: int, role: str):
+    """Changes a user's role by ID. Returns True if modified, False if not found or error."""
+    session: Session = SessionLocal()
+
+    try:
+        user = session.get(User, user_id)
+        if not user:
+            return False
+
+        user.role = UserRole[role.upper()]  # e.g. 'sales' -> UserRole.SALES
+        session.commit()
+        return True
+
+    except Exception as e:
+        session.rollback()
+        print(f"Error modifying user: {e}")
+        return False
+
+    finally:
+        session.close()

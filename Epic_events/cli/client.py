@@ -7,7 +7,7 @@ from Epic_events.service.client_service import (register_client_logic, list_clie
 
 
 @click.command()
-@role_required(["commercial", "gestion"])
+@role_required(["commercial"])
 def register_client():
     """Register a new client (commercial only)."""
     register_client_logic()
@@ -25,3 +25,6 @@ def list_my_clients():
 def list_clients():
     """List all clients, regardless of role."""
     list_clients_logic()
+
+
+
