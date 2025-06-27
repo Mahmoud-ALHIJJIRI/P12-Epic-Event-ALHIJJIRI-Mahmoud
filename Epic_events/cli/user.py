@@ -58,27 +58,6 @@ def delete_user():
 
 
 @click.command()
-@role_required(["gestion"])  # Manager-only access
-def update_user_role():
-    """Change a user's role by prompting for ID and new role (Manager only)."""
-    try:
-        user_id = click.prompt("Enter user ID to modify", type=int)
-    except click.Abort:
-        click.echo("❌ Aborted.")
-        return
-
-    # Prompt for the role using a case-insensitive choice
-    role = click.prompt("Enter new role", type=click.Choice(
-        ['commercial', 'gestion', 'support'], case_sensitive=False))
-
-    if update_user_role_logic(user_id=user_id, role=role):
-        click.echo(f"✅ Role of user {user_id} updated to '{role}'.")
-    else:
-        click.echo(f"❌ Failed to update role for user {user_id}. "
-                   f"The user may not exist or an error occurred.")
-
-
-@click.command()
 @role_required(["commercial", "gestion", "support"])
 def list_users():
     """List all users in the system."""
