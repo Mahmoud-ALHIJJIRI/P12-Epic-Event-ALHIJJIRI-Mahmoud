@@ -1,32 +1,35 @@
+# ─── External Imports ───────────────────────────────────────────────
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Optional
-from click import ClickException
-from sqlalchemy.exc import IntegrityError
+
+import click
+import jwt
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
-import jwt
-import click
-from rich.table import Table
+from click import ClickException
 from rich.console import Console
-from pathlib import Path
-
-
+from rich.table import Table
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+
+# ─── Internal Imports ───────────────────────────────────────────────
 from Epic_events.config import SECRET_KEY
 from Epic_events.database import SessionLocal
 from Epic_events.models import User, UserRole
 from Epic_events.auth.utils import save_token, load_token, decode_token, get_current_user
 
+# ─── Constants ──────────────────────────────────────────────────────
 ph = PasswordHasher()
 ALGORITHM = "HS256"
 TOKEN_FILE = Path.home() / ".epic_crm_token"
 
 
-# -------------------------
-# 🧑‍💻 Register Admin
-# -------------------------
+# ────────────────────────────────────────────────────────────────────
+# 👤 USER REGISTRATION
+# ────────────────────────────────────────────────────────────────────
 def register_admin_logic(name, email, password, role):
-    """Handles logic for registering a new user."""
+    """Register the initial admin (with role 'gestion')."""
     session = SessionLocal()
 
     try:
@@ -42,7 +45,7 @@ def register_admin_logic(name, email, password, role):
     try:
         session.add(user)
         session.commit()
-        click.echo("✅ User registered successfully!")
+        click.echo("✅ Admin registered successfully!")
     except IntegrityError:
         session.rollback()
         click.echo("❌ Email already in use.")
@@ -50,11 +53,8 @@ def register_admin_logic(name, email, password, role):
         session.close()
 
 
-# -------------------------
-# 🧑‍💻 Register User
-# -------------------------
 def register_user_logic(name, email, password, role):
-    """Handles logic for registering a new user."""
+    """Register a new user with the given role."""
     session = SessionLocal()
 
     try:
@@ -78,11 +78,12 @@ def register_user_logic(name, email, password, role):
         session.close()
 
 
-# -------------------------
-# 🔐 Login User
-# -------------------------
+# ────────────────────────────────────────────────────────────────────
+# 🔐 LOGIN / AUTH / LOGOUT
+# ────────────────────────────────────────────────────────────────────
+
 def login_user(email, password):
-    """Handles logic for logging in a user and storing the JWT."""
+    """Authenticate user and store JWT."""
     session = SessionLocal()
     user = session.query(User).filter_by(email=email).first()
 
@@ -107,48 +108,18 @@ def login_user(email, password):
 
     try:
         token = jwt.encode(token_data, SECRET_KEY, algorithm=ALGORITHM)
-    except jwt.PyJWTError as e:
-        click.echo(f"❌ Failed to generate token: {str(e)}")
-        session.close()
-        return
-
-    try:
         save_token(token)
         click.echo("✅ Logged in successfully.")
+    except jwt.PyJWTError as e:
+        click.echo(f"❌ Token generation failed: {str(e)}")
     except Exception as e:
-        click.echo(f"❌ Failed to write token to file: {str(e)}")
+        click.echo(f"❌ Failed to save token: {str(e)}")
     finally:
         session.close()
 
 
-# -------------------------
-# 👤 Logged in User
-# -------------------------
-def get_logged_in_user() -> User:
-    """
-    Returns the SQLAlchemy User object corresponding to the logged-in user,
-    based on the JWT token stored in ~/.epic_crm_token.
-    """
-    payload = get_current_user()
-    user_id = payload.get("sub")
-
-    if not user_id:
-        raise ClickException("❌ Token is missing user ID (sub claim).")
-
-    session: Session = SessionLocal()
-    user: Optional[User] = session.get(User, int(user_id))
-    session.close()
-
-    if not user:
-        raise ClickException("❌ Logged-in user not found in database.")
-    return user
-
-
-# -------------------------
-# 👤 Logged in User
-# -------------------------
 def logout_user():
-    """Logs out the current user by deleting the stored JWT token."""
+    """Delete the stored JWT token."""
     if not TOKEN_FILE.exists():
         raise Exception("❌ No user is currently logged in.")
 
@@ -159,11 +130,31 @@ def logout_user():
         raise Exception(f"❌ Error while logging out: {str(e)}")
 
 
-# -------------------------
-# 👤 Who Am I
-# -------------------------
+# ────────────────────────────────────────────────────────────────────
+# 👤 CURRENT USER INFO
+# ────────────────────────────────────────────────────────────────────
+
+def get_logged_in_user() -> User:
+    """
+    Return the current user object based on the stored JWT token.
+    """
+    payload = get_current_user()
+    user_id = payload.get("sub")
+
+    if not user_id:
+        raise ClickException("❌ Token missing user ID (sub claim).")
+
+    session: Session = SessionLocal()
+    user: Optional[User] = session.get(User, int(user_id))
+    session.close()
+
+    if not user:
+        raise ClickException("❌ Logged-in user not found in database.")
+    return user
+
+
 def get_logged_user_info():
-    """Prints info about the currently logged-in user."""
+    """Print information about the currently logged-in user."""
     try:
         token = load_token()
         payload = decode_token(token)
@@ -180,54 +171,24 @@ def get_logged_user_info():
         return
 
     session = SessionLocal()
-    user = session.query(User).get(int(user_id))
+    user = session.get(User, int(user_id))
     session.close()
 
     if user:
-        click.echo(f"✅ Logged in as: Name: {name}, email: {user.email}, User Role: {role}")
+        click.echo(f"✅ Logged in as: Name: {name}, Email: {user.email}, Role: {role}")
     else:
         click.echo("❌ User not found.")
 
 
-# -------------------------
-# 👤 List users
-# -------------------------
-def list_users_logic():
-    session = SessionLocal()
-    console = Console()
-
-    try:
-        users = session.query(User).all()
-
-        table = Table(title="📋 All Users")
-        table.add_column("ID")
-        table.add_column("Name")
-        table.add_column("Email")
-        table.add_column("Role")
-
-        for user in users:
-            table.add_row(
-                str(user.id),
-                user.name,
-                user.email,
-                user.role.value
-            )
-
-        console.print(table)
-
-    except Exception as e:
-        console.print(f"[red]❌ Error: {e}[/red]")
-    finally:
-        session.close()
-
-
+# ────────────────────────────────────────────────────────────────────
+# 👤 Update USER INFO
+# ────────────────────────────────────────────────────────────────────
 def delete_user_by_id(user_id: int):
-    """Deletes a user by their ID. Returns True if deleted, False if not found."""
+    """Delete a user by ID. Returns True if successful, False otherwise."""
     session: Session = SessionLocal()
 
     try:
         user = session.get(User, user_id)
-
         if not user:
             return False
 
@@ -245,35 +206,63 @@ def delete_user_by_id(user_id: int):
 
 def update_user_role_logic(user_id: int, role: str):
     """
-    Changes a user's role by ID.
+    Update the role of a given user.
 
     Args:
-        user_id: The ID of the user to modify.
-        role: The new role to assign.
+        user_id: ID of the user to update.
+        role: New role to assign.
 
     Returns:
-        True if the user was updated successfully, False otherwise.
+        True if update succeeded, False otherwise.
     """
     session: Session = SessionLocal()
     try:
-        # Retrieve the user object
         user = session.get(User, user_id)
         if not user:
-            # User not found
             return False
-        # Update the user's role
-        user.role = UserRole(role)  # e.g., 'commercial' -> UserRole.COMMERCIAL
-        # Commit the transaction
-        session.commit()
 
+        user.role = UserRole(role)
+        session.commit()
         return True
 
     except Exception as e:
-        # If any error occurs (e.g., database connection issue, invalid role string for enum)
-        # roll back the transaction to leave the database in a clean state.
-        click.echo(f"An unexpected error occurred: {e}", err=True)
         session.rollback()
+        click.echo(f"❌ Error updating role: {e}", err=True)
         return False
+
     finally:
-        # Ensure the session is always closed
+        session.close()
+
+
+# ────────────────────────────────────────────────────────────────────
+# 📋 USER LISTING / ADMIN FUNCTIONS
+# ────────────────────────────────────────────────────────────────────
+
+def list_users_logic():
+    """Display all users in a rich-formatted table."""
+    session = SessionLocal()
+    console = Console()
+
+    try:
+        users = session.query(User).all()
+
+        table = Table(title="📋 All Users")
+        table.add_column("ID")
+        table.add_column("Name")
+        table.add_column("Email")
+        table.add_column("Role")
+
+        for user in users:
+            table.add_row(
+                str(user.user_id),
+                user.name,
+                user.email,
+                user.role.value
+            )
+
+        console.print(table)
+
+    except Exception as e:
+        console.print(f"[red]❌ Error: {e}[/red]")
+    finally:
         session.close()
