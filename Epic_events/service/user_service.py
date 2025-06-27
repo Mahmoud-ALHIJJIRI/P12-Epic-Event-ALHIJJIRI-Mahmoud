@@ -262,7 +262,7 @@ def update_user_role_logic(user_id: int, role: str):
             # User not found
             return False
         # Update the user's role
-        user.role_enum = UserRole(role)  # e.g., 'commercial' -> UserRole.COMMERCIAL
+        user.role = UserRole(role)  # e.g., 'commercial' -> UserRole.COMMERCIAL
         # Commit the transaction
         session.commit()
 
