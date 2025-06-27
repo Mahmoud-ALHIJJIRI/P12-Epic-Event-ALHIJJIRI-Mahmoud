@@ -9,7 +9,7 @@ from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from click import ClickException
 from rich.console import Console
-from rich.table import Table
+from rich.panel import Panel
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 from Epic_events.config import SECRET_KEY
 from Epic_events.database import SessionLocal
 from Epic_events.models import User, UserRole
+from Epic_events.rich_styles import build_table
 from Epic_events.auth.utils import save_token, load_token, decode_token, get_current_user
 
 # ─── Constants ──────────────────────────────────────────────────────
@@ -239,30 +240,26 @@ def update_user_role_logic(user_id: int, role: str):
 # ────────────────────────────────────────────────────────────────────
 
 def list_users_logic():
-    """Display all users in a rich-formatted table."""
     session = SessionLocal()
     console = Console()
 
     try:
         users = session.query(User).all()
+        if not users:
+            console.print("[yellow]⚠️ No users found.[/yellow]")
+            return
 
-        table = Table(title="📋 All Users")
-        table.add_column("ID")
-        table.add_column("Name")
-        table.add_column("Email")
-        table.add_column("Role")
+        table = build_table("Registered Users", ["👤 ID", "🧑 Name", "📧 Email", "🔐 Role"])
 
         for user in users:
             table.add_row(
                 str(user.user_id),
                 user.name,
                 user.email,
-                user.role.value
+                user.role.value.capitalize()
             )
 
-        console.print(table)
+        console.print(Panel.fit(table, border_style="cyan", title="User Overview"))
 
-    except Exception as e:
-        console.print(f"[red]❌ Error: {e}[/red]")
     finally:
         session.close()

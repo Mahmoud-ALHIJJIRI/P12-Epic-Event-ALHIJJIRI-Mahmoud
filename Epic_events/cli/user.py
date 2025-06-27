@@ -100,6 +100,6 @@ def list_users():
 
 
 @click.command(name="whoami")
-def who_am_i():
+def whoami():
     """Show the currently logged-in user."""
     get_logged_user_info()
