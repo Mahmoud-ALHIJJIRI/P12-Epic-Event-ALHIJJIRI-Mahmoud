@@ -1,7 +1,7 @@
-# ─── External Imports ───────────────────────────────────────────────
+# 🧩 External Imports ────────────────────────────────────────────────
 import click
 
-# ─── Internal Imports ───────────────────────────────────────────────
+# 🏗️ Internal Imports ────────────────────────────────────────────────
 from Epic_events.service.user_service import (
     register_user_logic,
     login_user,
@@ -15,7 +15,7 @@ from Epic_events.service.user_service import (
 from Epic_events.auth.permissions import role_required
 
 
-# ─── CLI Commands: Authentication ───────────────────────────────────
+# 🔐 CLI Commands: Authentication ─────────────────────────────────────
 @click.command()
 @click.option('--email', prompt=True)
 @click.option('--password', prompt=True, hide_input=True)
@@ -30,7 +30,7 @@ def logout():
     logout_user()
 
 
-# ─── CLI Commands: User Registration ────────────────────────────────
+# 📝 CLI Commands: User Registration ─────────────────────────────────
 @click.command()
 def register_admin():
     """Register the first admin user (role: 'gestion')."""
@@ -54,7 +54,7 @@ def register_user():
     register_user_logic(name, email, password, role)
 
 
-# ─── CLI Commands: User Management ──────────────────────────────────
+# 🛠️ CLI Commands: User Management ───────────────────────────────────
 @click.command()
 @role_required(["gestion"])
 def update_user_role():
@@ -91,7 +91,7 @@ def delete_user():
         click.echo(f"❌ Error deleting user: {str(e)}")
 
 
-# ─── CLI Commands: Information ──────────────────────────────────────
+# 📋 CLI Commands: Information ───────────────────────────────────────
 @click.command()
 @role_required(["commercial", "gestion", "support"])
 def list_users():
