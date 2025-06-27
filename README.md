@@ -52,6 +52,7 @@ proper user roles, and effective data management.
 ├── config.py                   # Project configuration
 ├── database.py                 # DB connection/session
 ├── models.py                   # SQLAlchemy models
+├── rich_styles.py              # Rich style for better CLI outputs
 
 📄 .env                          # Environment variables
 📄 .gitignore
