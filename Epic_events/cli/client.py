@@ -1,9 +1,9 @@
 import click
 
-
-from Epic_events.auth.permissions import role_required
+from Epic_events.models import Client
+from Epic_events.auth.permissions import role_required, owner_required
 from Epic_events.service.client_service import (register_client_logic, list_clients_logic,
-                                                list_my_clients_logic)
+                                                list_my_clients_logic, delete_client_logic)
 
 
 @click.command()
@@ -11,6 +11,20 @@ from Epic_events.service.client_service import (register_client_logic, list_clie
 def register_client():
     """Register a new client (commercial only)."""
     register_client_logic()
+
+
+@click.command("delete-client")
+@click.option("--client-id", type=int, prompt="🔢 Enter the client ID to delete")
+@owner_required(Client, owner_field="commercial_id", id_arg="client_id")
+def delete_client(client_id):
+    """
+    Delete a client by ID (if you are the owner or part of 'gestion').
+    """
+    try:
+        message = delete_client_logic(client_id)
+        click.echo(message)
+    except Exception as e:
+        click.echo(f"❌ Error: {e}")
 
 
 @click.command()

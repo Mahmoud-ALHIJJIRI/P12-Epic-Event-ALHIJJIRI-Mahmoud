@@ -1,29 +1,25 @@
 import click
-from rich.table import Table
 from rich.console import Console
 from sqlalchemy.orm import Session
 from datetime import datetime, UTC
 
-from Epic_events.database import SessionLocal
-from Epic_events.models import Client
-from Epic_events.service.user_service import get_logged_in_user
+from werkzeug.exceptions import NotFound, Forbidden
 
+from Epic_events.database import SessionLocal
+from Epic_events.models import Client, UserRole
+from Epic_events.service.user_service import get_logged_in_user
+from Epic_events.rich_styles import build_table
 
 console = Console()
 
 
 def render_clients_table(clients, title: str):
-    table = Table(title=title)
-    table.add_column("ID", justify="right")
-    table.add_column("Full Name", style="bold")
-    table.add_column("Email")
-    table.add_column("Phone")
-    table.add_column("Company")
-    table.add_column("Assigned To")
 
+    table = build_table(title, ["👤 ID", "🧑 Full Name", "📧 Email", "🔐 phone",
+                                        " 🏢 Company", "👤 Commercial Ref"])
     for client in clients:
         table.add_row(
-            str(client.id),
+            str(client.client_id),
             client.full_name,
             client.email,
             client.phone,
@@ -55,7 +51,7 @@ def register_client_logic():
             company_name=company_name,
             created_date=now,
             last_contact=now,
-            commercial_id=user.id
+            commercial_id=user.user_id
         )
 
         session.add(client)
@@ -70,13 +66,32 @@ def register_client_logic():
         session.close()
 
 
+def delete_client_logic(client_id: int):
+    session = SessionLocal()
+    try:
+        # Fetch the client
+        client = session.query(Client).filter(Client.client_id == client_id).first()
+        if not client:
+            raise NotFound(f"Client with ID {client_id} not found.")
+
+        session.delete(client)
+        session.commit()
+        return f"✅ Client with ID {client_id} has been deleted."
+
+    except Exception as e:
+        session.rollback()
+        raise Exception(f"Unexpected error: {e}")
+    finally:
+        session.close()
+
+
 def list_my_clients_logic():
     """List clients assigned to the logged-in commercial user only."""
     user = get_logged_in_user()
     session = SessionLocal()
 
     try:
-        clients = session.query(Client).filter(Client.commercial_id == user.id).all()
+        clients = session.query(Client).filter(Client.commercial_id == user.user_id).all()
 
         if not clients:
             console.print("[yellow]⚠️ You have no clients assigned.[/yellow]")

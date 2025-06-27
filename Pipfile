@@ -12,6 +12,7 @@ rich = "*"
 argon2-cffi = "*"
 pyjwt = "*"
 alembic = "*"
+werkzeug = "*"
 
 [dev-packages]
 
