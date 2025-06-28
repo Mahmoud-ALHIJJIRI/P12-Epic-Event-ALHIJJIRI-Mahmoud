@@ -3,10 +3,10 @@ from rich.console import Console
 from sqlalchemy.orm import Session
 from datetime import datetime, UTC
 
-from werkzeug.exceptions import NotFound, Forbidden
+from werkzeug.exceptions import NotFound
 
 from Epic_events.database import SessionLocal
-from Epic_events.models import Client, UserRole
+from Epic_events.models import Client
 from Epic_events.service.user_service import get_logged_in_user
 from Epic_events.rich_styles import build_table
 
@@ -32,14 +32,20 @@ def render_clients_table(clients, title: str):
 
 def register_client_logic():
     """Register a new client (commercial only)."""
-    session: Session = SessionLocal()
+    session = SessionLocal()
     try:
         # Get Logged_in user (commercial)
         user = get_logged_in_user()
 
-        full_name = click.prompt("Client Full Name")
-        email = click.prompt("Client email")
-        phone = click.prompt("Client Phone")
+        full_name = click.prompt("👤Client Full Name")
+        while True:
+            email = click.prompt("📧 Client email")
+            existing = session.query(Client).filter(Client.email == email).first()
+            if existing:
+                console.print(f"[red]❌ Email '{email}' already exists. Please enter a different one.[/red]")
+            else:
+                break
+        phone = click.prompt("Client Phone (digits only)", type=int)
         company_name = click.prompt("Company Name")
 
         now = datetime.now(UTC)
@@ -62,6 +68,76 @@ def register_client_logic():
         session.rollback()
         console.print(f"[red]❌ Error creating client: {e}[/red]")
 
+    finally:
+        session.close()
+
+
+def update_client_logic(client_id: int):
+    session = SessionLocal()
+    updated_fields = {}
+    try:
+        client = session.query(Client).filter(Client.client_id == client_id).first()
+        if not client:
+            raise NotFound(f"Client with ID {client_id} not found.")
+
+        click.echo("📋 Leave any field blank to skip updating it.")
+
+        full_name = click.prompt("👤 Full name", default="", show_default=False)
+
+        if full_name:
+            updated_fields["full_name"] = full_name
+            click.echo("Client's Full Name has been updated")
+
+        company_name = click.prompt("🏢 Company name", default="", show_default=False)
+
+        if company_name:
+            updated_fields["company_name"] = company_name
+            click.echo("Client's Company Name has been updated")
+
+        while True:
+            email = click.prompt("📧 Email (leave blank to skip)", default="", show_default=False)
+            if not email:
+                break
+            existing = session.query(Client).filter(Client.email == email, Client.client_id != client_id).first()
+
+            if existing:
+                console.print(
+                    f"[red]❌ Email '{email}' already exists. Please enter a different one or leave blank.[/red]")
+            else:
+                updated_fields["email"] = email
+                click.echo("Client's Email has been updated")
+                break
+
+        while True:
+            phone = click.prompt("📱 Phone (leave blank to skip)", default="", show_default=False)
+            if not phone:
+                break
+
+            if phone:
+                if phone.isdigit():
+                    click.echo("✅ Phone number accepted.")
+                    updated_fields["phone"] = phone
+                    click.echo("Client's Phone has been updated")
+                    break
+
+                else:
+                    click.echo("❌ Error: Phone number must contain only digits.")
+
+        if not updated_fields:
+            click.echo("⚠️ No changes entered. Nothing to update.")
+            return
+
+        # ✅ Apply updates
+        for field, value in updated_fields.items():
+            if hasattr(client, field):
+                setattr(client, field, value)
+
+        session.commit()
+        return f"✅ Client with ID {client_id} has been updated."
+
+    except Exception as e:
+        session.rollback()
+        raise e
     finally:
         session.close()
 
