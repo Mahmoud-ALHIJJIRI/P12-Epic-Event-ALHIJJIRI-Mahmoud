@@ -1,16 +1,19 @@
+# ─── External Imports ───────────────────────────────────────────────
 from rich import box
 from rich.table import Table
 
-# Shared box styles
+
+# 🎨 RICH STYLING CONSTANTS ──────────────────────────────────────────
 DEFAULT_BOX = box.MINIMAL_DOUBLE_HEAD
 HEADER_STYLE = "bold magenta"
 TITLE_STYLE = "bold cyan"
 
 
-# Example function to build styled tables
+# 📋 TABLE BUILDER ───────────────────────────────────────────────────
 def build_table(title: str, columns: list[str]) -> "Table":
-    from rich.table import Table
-
+    """
+    Build a styled Rich table with a title and column headers.
+    """
     table = Table(
         title=f"📋 [{TITLE_STYLE}]{title}[/{TITLE_STYLE}]",
         title_justify="left",

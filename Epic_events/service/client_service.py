@@ -1,20 +1,22 @@
+# 🧩 External Imports ────────────────────────────────────────────────
 import click
 from rich.console import Console
 from sqlalchemy.orm import Session
 from datetime import datetime, UTC
-
 from werkzeug.exceptions import NotFound
 
+# 🏗️ Internal Imports ────────────────────────────────────────────────
 from Epic_events.database import SessionLocal
-from Epic_events.models import Client
+from Epic_events.models import Client, User
 from Epic_events.service.user_service import get_logged_in_user
 from Epic_events.rich_styles import build_table
 
+# 🎨 Rich Console Setup ──────────────────────────────────────────────
 console = Console()
 
 
+# 🖼️ Utility: Render Client Table ────────────────────────────────────
 def render_clients_table(clients, title: str):
-
     table = build_table(title, ["👤 ID", "🧑 Full Name", "📧 Email", "🔐 phone",
                                         " 🏢 Company", "👤 Commercial Ref"])
     for client in clients:
@@ -26,28 +28,27 @@ def render_clients_table(clients, title: str):
             client.company_name,
             str(client.commercial_id) if client.commercial_id else "Unassigned"
         )
-
     console.print(table)
 
 
+# 📝 Create Client ───────────────────────────────────────────────────
 def register_client_logic():
     """Register a new client (commercial only)."""
     session = SessionLocal()
     try:
-        # Get Logged_in user (commercial)
         user = get_logged_in_user()
 
-        full_name = click.prompt("👤Client Full Name")
+        full_name = click.prompt("👤 Client Full Name")
         while True:
-            email = click.prompt("📧 Client email")
+            email = click.prompt("📧 Client Email")
             existing = session.query(Client).filter(Client.email == email).first()
             if existing:
                 console.print(f"[red]❌ Email '{email}' already exists. Please enter a different one.[/red]")
             else:
                 break
-        phone = click.prompt("Client Phone (digits only)", type=int)
-        company_name = click.prompt("Company Name")
 
+        phone = click.prompt("📱 Client Phone (digits only)", type=int)
+        company_name = click.prompt("🏢 Company Name")
         now = datetime.now(UTC)
 
         client = Client(
@@ -72,6 +73,7 @@ def register_client_logic():
         session.close()
 
 
+# 🛠️ Update Client ──────────────────────────────────────────────────
 def update_client_logic(client_id: int):
     session = SessionLocal()
     updated_fields = {}
@@ -80,32 +82,28 @@ def update_client_logic(client_id: int):
         if not client:
             raise NotFound(f"Client with ID {client_id} not found.")
 
-        click.echo("📋 Leave any field blank to skip updating it.")
+        click.secho("📋 Leave any field blank to skip updating it.", fg="cyan")
 
-        full_name = click.prompt("👤 Full name", default="", show_default=False)
-
+        full_name = click.prompt("👤 Full Name", default="", show_default=False)
         if full_name:
             updated_fields["full_name"] = full_name
-            click.echo("Client's Full Name has been updated")
+            click.secho("✅ Full Name updated.", fg="green")
 
-        company_name = click.prompt("🏢 Company name", default="", show_default=False)
-
+        company_name = click.prompt("🏢 Company Name", default="", show_default=False)
         if company_name:
             updated_fields["company_name"] = company_name
-            click.echo("Client's Company Name has been updated")
+            click.secho("✅ Company Name updated.", fg="green")
 
         while True:
             email = click.prompt("📧 Email (leave blank to skip)", default="", show_default=False)
             if not email:
                 break
             existing = session.query(Client).filter(Client.email == email, Client.client_id != client_id).first()
-
             if existing:
-                console.print(
-                    f"[red]❌ Email '{email}' already exists. Please enter a different one or leave blank.[/red]")
+                console.print(f"[red]❌ Email '{email}' already exists. Please enter a different one or leave blank.[/red]")
             else:
                 updated_fields["email"] = email
-                click.echo("Client's Email has been updated")
+                click.secho("✅ Email updated.", fg="green")
                 break
 
         while True:
@@ -113,27 +111,23 @@ def update_client_logic(client_id: int):
             if not phone:
                 break
 
-            if phone:
-                if phone.isdigit():
-                    click.echo("✅ Phone number accepted.")
-                    updated_fields["phone"] = phone
-                    click.echo("Client's Phone has been updated")
-                    break
-
-                else:
-                    click.echo("❌ Error: Phone number must contain only digits.")
+            if phone.isdigit():
+                updated_fields["phone"] = phone
+                click.secho("✅ Phone number updated.", fg="green")
+                break
+            else:
+                click.secho("❌ Error: Phone number must contain only digits.", fg="red")
 
         if not updated_fields:
-            click.echo("⚠️ No changes entered. Nothing to update.")
+            click.secho("⚠️ No changes entered. Nothing to update.", fg="yellow")
             return
 
-        # ✅ Apply updates
         for field, value in updated_fields.items():
             if hasattr(client, field):
                 setattr(client, field, value)
 
         session.commit()
-        return f"✅ Client with ID {client_id} has been updated."
+        click.secho(f"✅ Client with ID {client_id} has been updated.", fg="green")
 
     except Exception as e:
         session.rollback()
@@ -142,10 +136,34 @@ def update_client_logic(client_id: int):
         session.close()
 
 
+# 🔄 Reassign Client Commercial ──────────────────────────────────────
+def reassign_commercial_logic(client_id: int, new_commercial_id: int):
+    session = SessionLocal()
+    try:
+        client = session.query(Client).filter(Client.client_id == client_id).first()
+        if not client:
+            raise NotFound(f"Client with ID {client_id} not found.")
+
+        new_commercial = session.query(User).filter(
+            User.user_id == new_commercial_id, User.role == "commercial").first()
+        if not new_commercial:
+            raise NotFound(f"User ID {new_commercial_id} is not a valid commercial.")
+
+        client.commercial_id = new_commercial_id
+        session.commit()
+        return f"✅ Client {client_id} is now assigned to commercial {new_commercial_id}."
+
+    except Exception as e:
+        session.rollback()
+        raise e
+    finally:
+        session.close()
+
+
+# 🗑️ Delete Client ──────────────────────────────────────────────────
 def delete_client_logic(client_id: int):
     session = SessionLocal()
     try:
-        # Fetch the client
         client = session.query(Client).filter(Client.client_id == client_id).first()
         if not client:
             raise NotFound(f"Client with ID {client_id} not found.")
@@ -161,6 +179,7 @@ def delete_client_logic(client_id: int):
         session.close()
 
 
+# 📋 List My Clients ─────────────────────────────────────────────────
 def list_my_clients_logic():
     """List clients assigned to the logged-in commercial user only."""
     user = get_logged_in_user()
@@ -181,6 +200,7 @@ def list_my_clients_logic():
         session.close()
 
 
+# 🌐 List All Clients ────────────────────────────────────────────────
 def list_clients_logic():
     """List all clients, regardless of role."""
     get_logged_in_user()
