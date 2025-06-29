@@ -22,12 +22,23 @@ from .client import (
     reassign_commercial
 )
 
+from .contract import (
+    create_contract,
+    list_contracts,
+    update_contract,
+    delete_contract,
+    list_client_contracts
+)
+
 
 # 🚀 ROOT CLI COMMAND GROUP ──────────────────────────────────────────
 @click.group()
 def cli():
-    """📦 Epic Events CLI"""
-    pass
+    """\n📦 [bold blue]Epic Events CLI[/bold blue]\n
+    Welcome to the Epic Events CRM command-line interface.\n
+    Use the commands below to manage users, clients, and events.\n"""
+    click.secho("🚀 Launching Epic Events CLI...", fg='green', bold=True)
+    click.secho("Type --help after any command for more info.\n", fg='yellow')
 
 
 # 👤 USER COMMANDS ───────────────────────────────────────────────────
@@ -48,3 +59,11 @@ cli.add_command(list_my_clients, name="list_my_clients")
 cli.add_command(delete_client, name="delete_client")
 cli.add_command(update_client, name="update_client")
 cli.add_command(reassign_commercial, name="reassign_commercial")
+
+
+# 📋 CLIENT COMMANDS ───────────────────────────────────────────────
+cli.add_command(create_contract, name="create_contract")
+cli.add_command(list_contracts, name="list_contracts")
+cli.add_command(list_client_contracts, name="list_client_contracts")
+cli.add_command(update_contract, name="update_contract")
+cli.add_command(delete_contract, name="delete_contract")

@@ -1,5 +1,6 @@
 # ─── External Imports ───────────────────────────────────────────────
 from sqlalchemy import Column, Integer, String, Enum, DateTime, ForeignKey, Boolean
+from sqlalchemy.dialects.mysql import VARCHAR
 from sqlalchemy.orm import relationship
 from datetime import datetime, UTC
 import enum
@@ -40,10 +41,11 @@ class Client(Base):
     client_id = Column(Integer, primary_key=True)
     full_name = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=False)
-    phone = Column(Integer, nullable=False)
+    phone = Column(VARCHAR(20), nullable=False)
     company_name = Column(String, nullable=False)
     created_date = Column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
-    last_contact = Column(DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC), nullable=False)
+    last_contact = Column(DateTime, default=lambda: datetime.now(UTC),
+                          onupdate=lambda: datetime.now(UTC), nullable=False)
 
     # Foreign key
     commercial_id = Column(Integer, ForeignKey('users.user_id', ondelete='SET NULL'), nullable=True)

@@ -2,6 +2,7 @@
 import click
 from rich.console import Console
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from datetime import datetime, UTC
 from werkzeug.exceptions import NotFound
 
@@ -24,7 +25,7 @@ def render_clients_table(clients, title: str):
             str(client.client_id),
             client.full_name,
             client.email,
-            client.phone,
+            str(client.phone),
             client.company_name,
             str(client.commercial_id) if client.commercial_id else "Unassigned"
         )
@@ -76,6 +77,7 @@ def register_client_logic():
 # 🛠️ Update Client ──────────────────────────────────────────────────
 def update_client_logic(client_id: int):
     session = SessionLocal()
+    now = datetime.now(UTC)
     updated_fields = {}
     try:
         client = session.query(Client).filter(Client.client_id == client_id).first()
@@ -83,6 +85,8 @@ def update_client_logic(client_id: int):
             raise NotFound(f"Client with ID {client_id} not found.")
 
         click.secho("📋 Leave any field blank to skip updating it.", fg="cyan")
+
+        updated_fields["last_contact"] = now
 
         full_name = click.prompt("👤 Full Name", default="", show_default=False)
         if full_name:
@@ -100,7 +104,8 @@ def update_client_logic(client_id: int):
                 break
             existing = session.query(Client).filter(Client.email == email, Client.client_id != client_id).first()
             if existing:
-                console.print(f"[red]❌ Email '{email}' already exists. Please enter a different one or leave blank.[/red]")
+                console.print(f"[red]❌ Email '{email}' "
+                              f"already exists. Please enter a different one or leave blank.[/red]")
             else:
                 updated_fields["email"] = email
                 click.secho("✅ Email updated.", fg="green")
@@ -171,6 +176,10 @@ def delete_client_logic(client_id: int):
         session.delete(client)
         session.commit()
         return f"✅ Client with ID {client_id} has been deleted."
+
+    except IntegrityError as ie:
+        session.rollback()
+        console.print(f"[yellow]❌ Foreign key error: {ie.orig}[/yellow]")
 
     except Exception as e:
         session.rollback()
