@@ -26,6 +26,7 @@ from .contract import (
     create_contract,
     list_contracts,
     update_contract,
+    reassign_contract,
     delete_contract,
     list_client_contracts
 )
@@ -61,9 +62,19 @@ cli.add_command(update_client, name="update_client")
 cli.add_command(reassign_commercial, name="reassign_commercial")
 
 
-# 📋 CLIENT COMMANDS ───────────────────────────────────────────────
+# 📋 CONTRACT COMMANDS ───────────────────────────────────────────────
 cli.add_command(create_contract, name="create_contract")
 cli.add_command(list_contracts, name="list_contracts")
 cli.add_command(list_client_contracts, name="list_client_contracts")
 cli.add_command(update_contract, name="update_contract")
+cli.add_command(reassign_contract, name="reassign_contract")
 cli.add_command(delete_contract, name="delete_contract")
+
+
+# 📋 Event COMMANDS ───────────────────────────────────────────────
+cli.add_command(create_event, name="create_event")
+cli.add_command(list_events, name="list_events")
+cli.add_command(list_client_events, name="list_client_events")
+cli.add_command(update_event, name="update_event")
+cli.add_command(reassign_event, name="reassign_event")
+cli.add_command(delete_event, name="delete_event")

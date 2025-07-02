@@ -9,29 +9,36 @@ from Epic_events.service.contract_service import (
     list_contracts_logic,
     update_contract_logic,
     delete_contract_logic,
-    list_client_contracts_logic
+    list_client_contracts_logic,
+    reassign_contract_logic
 )
 
 
+# 📝 CLI Command: Create Contract ─────────────────────────────────────
 @click.command()
 @role_required(["gestion"])
 def create_contract():
+    """📝 Create a new contract (gestion only)."""
     create_contract_logic()
 
 
+# 📋 CLI Commands: Contract Listings ──────────────────────────────────
 @click.command()
 @role_required(["gestion", "commercial", "support"])
 def list_contracts():
+    """📋 List all contracts in the system."""
     list_contracts_logic()
 
 
 @click.command()
 @role_required(["gestion", "commercial", "support"])
 def list_client_contracts():
-    client = click.prompt("Enter Client Id to in order to list attached contracts")
+    """📄 List contracts linked to a specific client."""
+    client = click.prompt("🔎 Enter Client ID to list attached contracts")
     list_client_contracts_logic(client)
 
 
+# 🔧 CLI Command: Update Contract ─────────────────────────────────────
 @click.command()
 @click.option("--contract-id", type=int, prompt="🔢 Enter the contract ID to update")
 @owner_required(Contract, owner_field="commercial_id", id_arg="contract_id")
@@ -43,5 +50,18 @@ def update_contract(contract_id):
     update_contract_logic(contract_id)
 
 
+# 🔄 CLI Command: Reassign Contract ───────────────────────────────────
+@click.command()
+@role_required(["gestion"])
+def reassign_contract():
+    """🔄 Reassign a client or commercial to an existing contract (gestion only)."""
+    contract_id = click.prompt("🔢 Enter contract ID", type=int)
+    reassign_contract_logic(contract_id)
+
+
+# 🗑️ CLI Command: Delete Contract ─────────────────────────────────────
+@click.command("delete_contract")
+@role_required(["gestion"])
 def delete_contract():
-    pass
+    """🗑️ Delete a contract by ID (gestion only)."""
+    delete_contract_logic()

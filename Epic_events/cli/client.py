@@ -46,7 +46,7 @@ def reassign_commercial():
         new_commercial_id = click.prompt("👔 Enter the new commercial's user ID", type=int)
 
         success_message = reassign_commercial_logic(client_id, new_commercial_id)
-        click.secho(f"✅ {success_message}", fg="green")
+        click.secho(f" {success_message}", fg="green")
 
     except ValueError as e:
         click.secho(f"❌ Error: {e}", fg="red")

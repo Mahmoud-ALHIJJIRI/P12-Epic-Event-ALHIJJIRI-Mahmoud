@@ -156,7 +156,7 @@ def reassign_commercial_logic(client_id: int, new_commercial_id: int):
 
         client.commercial_id = new_commercial_id
         session.commit()
-        return f"✅ Client {client_id} is now assigned to commercial {new_commercial_id}."
+        return f"✅  Client {client_id} is now assigned to commercial {new_commercial_id}."
 
     except Exception as e:
         session.rollback()
