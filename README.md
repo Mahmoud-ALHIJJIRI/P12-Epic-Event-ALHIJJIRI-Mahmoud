@@ -1,34 +1,27 @@
-Absolutely! Here’s the full README.md you can copy and paste directly:
+Here’s your updated README.md with a new section called 🔧 Prepare Environment Variables, instructing users to create a .env file properly:
 
 ⸻
 
+🎉 Epic Events CRM CLI
 
-# 🎉 Epic Events CRM CLI
+Epic Events CRM is a command-line interface application designed to streamline how Epic Events manages clients, contracts, and events. Built with Python, PostgreSQL, and a clean service architecture, this tool ensures secure access, proper user roles, and effective data management.
 
-Epic Events CRM is a command-line interface application designed to streamline 
-how Epic Events manages clients, contracts, and events. Built with Python, 
-PostgreSQL, and a clean service architecture, this tool ensures secure access, 
-proper user roles, and effective data management.
+⸻
 
----
+🚀 Features
+	•	🔐 JWT-based Authentication
+	•	👤 Role-Based Access (Commercial, Gestion, Support)
+	•	📇 Client Management
+	•	📃 Contract Management
+	•	📅 Event Scheduling
+	•	🔑 Password hashing with Argon2
+	•	📊 Beautiful CLI display with rich
+	•	🧱 Database migrations via Alembic
+	•	📁 Clean folder structure with service layers
 
-## 🚀 Features
+⸻
 
-- 🔐 JWT-based Authentication  
-- 👤 Role-Based Access (Commercial, Gestion, Support)  
-- 📇 Client Management  
-- 📃 Contract Management  
-- 📅 Event Scheduling  
-- 🔑 Password hashing with Argon2  
-- 📊 Beautiful CLI display with `rich`  
-- 🧱 Database migrations via Alembic  
-- 📁 Clean folder structure with service layers  
-
----
-
-## 📁 Project Structure
-
-## 📁 Project Structure
+📁 Project Structure
 
 <pre>
 📁 Epic_events/
@@ -59,41 +52,63 @@ proper user roles, and effective data management.
 📄 main.py                      # CLI entry point
 📄 Pipfile
 📄 Pipfile.lock
-📄 README.md                    # Project documentation                  # You’re here
+📄 README.md                    # Project documentation
 </pre>
 
 
----
 
-## ✅ Requirements
+⸻
 
-- Python 3.9 or newer  
-- PostgreSQL  
-- [Pipenv](https://pipenv.pypa.io/en/latest/)  
+✅ Requirements
+	•	Python 3.9 or newer
+	•	PostgreSQL
+	•	Pipenv
 
----
+⸻
 
-## 🧰 Setup Instructions
+🧰 Setup Instructions
 
-### 1. Clone the Repo
+1. Clone the Repo
 
-```bash
 git clone https://github.com/yourusername/epic-events-crm.git
 cd epic-events-crm
+
+
+⸻
 
 2. Install Dependencies Using Pipenv
 
 pipenv install
 pipenv shell
 
-3. Configure PostgreSQL
 
-Create the database in PostgreSQL:
+⸻
 
-psql -U postgres
+3. 🔧 Prepare Environment Variables
+
+Create a .env file at the project root and add the following variables:
+
+# PostgreSQL DB URL
+DATABASE_URL=postgresql://postgres@localhost:5432/epic_event_db
+
+# Secret key for JWT
+JWT_SECRET_KEY=your_secret_key_here
+
+# Token expiration (in minutes)
+JWT_EXPIRATION_MINUTES=60
+
+Make sure to replace your_secret_key_here with a secure random string (e.g., using openssl rand -hex 32 or any password generator).
+
+✅ Note: This .env file is automatically loaded by the application to configure the database and JWT authentication.
+
+⸻
+
+4. Configure PostgreSQL
+
+-- In psql
 CREATE DATABASE epic_event_db;
 
-Update alembic.ini with the correct database URL:
+Also, update alembic.ini if using Alembic directly:
 
 # Inside alembic.ini
 sqlalchemy.url = postgresql://postgres@localhost:5432/epic_event_db
@@ -101,13 +116,13 @@ sqlalchemy.url = postgresql://postgres@localhost:5432/epic_event_db
 
 ⸻
 
-🏗️ Initialize the Database
+5. 🏗️ Initialize the Database
 
 Run this command to auto-create the tables:
 
 python main.py
 
-Alternatively, if using Alembic:
+Alternatively, using Alembic:
 
 alembic revision --autogenerate -m "Initial migration"
 alembic upgrade head
@@ -121,6 +136,7 @@ Role	Description & Permissions
 Commercial	Create/update their clients and contracts, create events
 Gestion	Full access: manage users, contracts, events
 Support	Can view/update only the events assigned to them
+
 
 ⸻
 
@@ -148,9 +164,13 @@ python main.py logout
 ⸻
 
 ⚙️ Dev & Debug Notes
-	•	JWT token is saved in ~/.epic_crm_token (default home dir)
-	•	To logout, delete that file or use python main.py logout
-	•	You can also change the token path to the project folder for convenience
+	•	JWT token is saved in ~/.epic_crm_token by default
+	•	To logout, delete that file or run:
+
+python main.py logout
+
+
+	•	You can change the token path to a custom one for easier local development
 
 ⸻
 
@@ -174,6 +194,6 @@ This project is for educational and internal use at Epic Events.
 Mahmoud ALHIJJIRI
 GitHub: @Mahmoud-ALHIJJIRI
 
---- 
+⸻
 
-Let me know if you'd like to include screenshots, database diagrams, or deployment instructions too!
+Let me know if you’d like to include .env.example, unit test instructions, or Docker setup next!
