@@ -31,6 +31,15 @@ from .contract import (
     list_client_contracts
 )
 
+from .event import (
+    create_event,
+    list_events,
+    update_event,
+    reassign_event,
+    delete_event,
+    list_client_events
+)
+
 
 # 🚀 ROOT CLI COMMAND GROUP ──────────────────────────────────────────
 @click.group()
