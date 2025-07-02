@@ -34,20 +34,17 @@ def list_contracts():
 @role_required(["gestion", "commercial", "support"])
 def list_client_contracts():
     """📄 List contracts linked to a specific client."""
-    client = click.prompt("🔎 Enter Client ID to list attached contracts")
-    list_client_contracts_logic(client)
+    list_client_contracts_logic()
 
 
 # 🔧 CLI Command: Update Contract ─────────────────────────────────────
 @click.command()
-@click.option("--contract-id", type=int, prompt="🔢 Enter the contract ID to update")
 @owner_required(Contract, owner_field="commercial_id", id_arg="contract_id")
-def update_contract(contract_id):
+def update_contract():
     """
     🔧 Update a contract's information (only if you are the assigned commercial or part of 'gestion').
     """
-    click.secho(f"🔧 Updating contract with ID {contract_id}...", fg="cyan")
-    update_contract_logic(contract_id)
+    update_contract_logic()
 
 
 # 🔄 CLI Command: Reassign Contract ───────────────────────────────────

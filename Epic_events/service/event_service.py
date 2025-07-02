@@ -1,42 +1,64 @@
 # 🧩 External Imports ────────────────────────────────────────────────
 import click
 from rich.console import Console
-from datetime import datetime, UTC
+from datetime import datetime
 
-from sqlalchemy import VARCHAR
 from werkzeug.exceptions import NotFound
 
 # 🏗️ Internal Imports ────────────────────────────────────────────────
 from Epic_events.database import SessionLocal
-from Epic_events.models import Client, User, Contract, UserRole, Event
+from Epic_events.models import Client, User, Contract, Event
 from Epic_events.rich_styles import build_table
-from Epic_events.service.user_service import get_logged_in_user
-
 
 # 🎨 Rich Console Setup ──────────────────────────────────────────────
 console = Console()
 
 
-# 🖼️ Utility: Render Contracts Table ─────────────────────────────────
-def render_events_table(contracts, title: str):
-    table = build_table(title, ["🆔 ID", "🤑 Total Amount", "💰 Remains to pay", "🤝 Is Signed",
-                                        "👤 Commercial Ref", "💼 Client Ref"])
-    for contract in contracts:
+# 🖼️ Utility: Render Events Table ───────────────────────────────────────────────
+def render_events_table(events, title: str):
+    """Render a styled Rich table of event entries with emoji-enhanced headers."""
+    table = build_table(
+        title,
+        [
+            "🆔 Event ID", "📝 Event Name", "📅 Start Date", "📅 End Date",
+            "📍 Location", "👤 Support Ref", "💼 Client Ref", "📄 Contract Ref"
+        ]
+    )
+    for event in events:
         table.add_row(
-            str(contract.client_id),
-            str(contract.contract_id),
-            str(contract.amount_total),
-            str(contract.amount_due),
-            str(contract.is_signed),
-            str(contract.commercial_id) if contract.commercial_id else "Unassigned",
-            str(contract.client_id) if contract.commercial_id else "Unassigned"
+            str(event.event_id),
+            str(event.event_name),
+            str(event.start_date),
+            str(event.end_date),
+            str(event.location),
+            str(event.support_id) if event.support_id else "❌ Unassigned",
+            str(event.client_id) if event.client_id else "❌ Unassigned",
+            str(event.contract_id),
         )
     console.print(table)
 
 
-def prompt_for_date(label):
+# 🧠 Utility: Prompt for a DateTime ─────────────────────────────────────────────
+def prompt_for_date(label, required=True):
+    """
+    Prompt the user to input a datetime in format 'DD-MM-YYYY HH:MM'.
+
+    Args:
+        label (str): Descriptive label for the field (e.g., 'Start Date').
+        required (bool): Whether the field is mandatory. If False, input can be skipped.
+
+    Returns:
+        datetime | None: Parsed datetime object or None if skipped.
+    """
     while True:
-        date_str = click.prompt(f"{label} (format: DD-MM-YYYY HH:MM)")
+        date_str = click.prompt(f"🗓️ {label} (format: DD-MM-YYYY HH:MM)", default="", show_default=False)
+
+        if not date_str:
+            if required:
+                click.secho("❌ This field is required. Please enter a valid date.", fg="red")
+                continue
+            return None
+
         try:
             return datetime.strptime(date_str, "%d-%m-%Y %H:%M")
         except ValueError:
@@ -45,43 +67,44 @@ def prompt_for_date(label):
 
 # 📝 Create Contract ─────────────────────────────────────────────────
 def create_event_logic():
+    """📌 Create a new event and link it to a contract, client, and support user."""
     session = SessionLocal()
-    now = datetime.now(UTC)
-    user = get_logged_in_user()
 
     try:
+        event_name = click.prompt("📝 Enter the event name", type=str)
+        start_date = prompt_for_date("📅 Event's Start Date")
+        end_date = prompt_for_date("📅 Event's End Date")
+        location = click.prompt("📍 Enter the event location", type=str)
+        notes = click.prompt("🗒️ Notes or description", type=str)
 
-        event_name = click.prompt("Event's name", type=str)
-        start_date = prompt_for_date("Event's Start Date")
-        end_date = prompt_for_date("Event's Start Date")
-        location = click.prompt("Event's Location", type=str)
-        notes = click.prompt("Notes", type=str)
-
+        # 🔧 Validate Support Contact
         while True:
             support_id = click.prompt("👨‍🔧 Support ID", type=int)
             support = session.query(User).filter_by(user_id=support_id, role="support").first()
             if not support:
-                console.print(
-                    f"[red]❌ User with ID {support_id} not found or not a support user. Please try again.[/red]")
-                continue  # 🔁 Keep prompting
-            break  # ✅ Valid support found
+                console.print(f"[red]❌ No support user found with ID {support_id}. Try again.[/red]")
+                continue
+            break
 
+        # 🔍 Validate Client
         while True:
             client_id = click.prompt("👤 Client ID", type=int)
             client = session.query(Client).filter_by(client_id=client_id).first()
             if not client:
-                console.print(f"[red]❌ Client with ID {client_id} not found. Please try again.[/red]")
-                continue  # 🔁 Keep prompting
-            break  # ✅ Valid client found
+                console.print(f"[red]❌ No client found with ID {client_id}. Try again.[/red]")
+                continue
+            break
 
+        # 📄 Validate Contract
         while True:
             contract_id = click.prompt("📄 Contract ID", type=int)
             contract = session.query(Contract).filter_by(contract_id=contract_id).first()
             if not contract:
-                console.print(f"[red]❌ Contract with ID {contract_id} not found. Please try again.[/red]")
-                continue  # 🔁 Keep prompting
-            break  # ✅ Valid contract found
+                console.print(f"[red]❌ No contract found with ID {contract_id}. Try again.[/red]")
+                continue
+            break
 
+        # ✅ Create the Event
         event = Event(
             event_name=event_name,
             start_date=start_date,
@@ -91,18 +114,40 @@ def create_event_logic():
             support_id=support_id,
             client_id=client_id,
             contract_id=contract_id,
-
         )
         session.add(event)
         session.commit()
 
-        console.print(f"[green]✅ Events {event.event_name} attached to the contract ID '{contract.contract_id}' "
-                      f"of client '{client_id}' "
-                      f"added successfully![/green]")
+        console.print(f"[green]✅ Event '{event.event_name}' successfully created and linked to contract "
+                      f"{contract_id} for {client.full_name}.[/green]")
 
     except Exception as e:
         session.rollback()
-        console.print(f"[red]❌ Error creating Event: {e}[/red]")
+        console.print(f"[red]❌ Error creating event: {e}[/red]")
+
+    finally:
+        session.close()
+
+
+# 📋 List All Contracts ──────────────────────────────────────────────
+def list_event_details_logic():
+    """📋 Display details for a single event by ID."""
+    session = SessionLocal()
+
+    try:
+        while True:
+            event_id = click.prompt("🔎 Enter the Event ID to show details", type=int)
+            event = session.query(Event).filter(Event.event_id == event_id).first()
+
+            if not event:
+                console.print(f"[yellow]⚠️ No event found with ID {event_id}. Please try again.[/yellow]")
+                continue
+
+            render_events_table([event], title=f"📋 Event {event_id} Details")
+            return
+
+    except Exception as e:
+        console.print(f"[red]❌ Error: {e}[/red]")
 
     finally:
         session.close()
@@ -110,161 +155,178 @@ def create_event_logic():
 
 # 📋 List All Contracts ──────────────────────────────────────────────
 def list_events_logic():
-    """List All Contracts regardless of role."""
+    """📋 List all events, regardless of user role."""
     session = SessionLocal()
 
     try:
-        contracts = session.query(Contract).all()
+        events = session.query(Event).all()
 
-        if not contracts:
-            console.print("[yellow]⚠️ No Contracts found.[/yellow]")
+        if not events:
+            console.print("[yellow]⚠️ No events found in the system.[/yellow]")
             return
-        render_events_table(contracts, title="📋 All Contracts")
+
+        render_events_table(events, title="📋 All Events")
 
     except Exception as e:
-        console.print(f"[red]❌ Error: {e}[/red]")
+        console.print(f"[red]❌ Error while listing events: {e}[/red]")
 
     finally:
         session.close()
 
 
 # 📄 List Contracts for a Client ─────────────────────────────────────
-def list_client_events_logic(client_id: int):
-    """List contracts linked to a specific client."""
+def list_client_events_logic():
+    """📄 List all events linked to a specific client."""
     session = SessionLocal()
 
     try:
-        contracts = session.query(Contract).filter(Contract.client_id == client_id).all()
+        while True:
+            client_id = click.prompt("🔎 Enter the Client ID to list their events", type=int)
+            events = session.query(Event).filter(Event.client_id == client_id).all()
 
-        if not contracts:
-            console.print("[yellow]⚠️ No Contracts found.[/yellow]")
+            if not events:
+                console.print(f"[yellow]⚠️ No events found for client ID {client_id}. Try another one.[/yellow]")
+                continue
+
+            render_events_table(events, title=f"📋 Events for Client {client_id}")
             return
-        render_events_table(contracts, title=f"📋 Contracts for Client {client_id}")
 
     except Exception as e:
-        console.print(f"[red]❌ Error: {e}[/red]")
+        console.print(f"[red]❌ Error while listing client events: {e}[/red]")
 
     finally:
         session.close()
 
 
 # 🔧 Update Contract ─────────────────────────────────────────────────
-def update_event_logic(contract_id: int):
+def update_event_logic():
+    """🔧 Update an event's details interactively via the CLI."""
     session = SessionLocal()
     updated_fields = {}
 
     try:
-        contract = session.query(Contract).filter(Contract.contract_id == contract_id).first()
-        if not contract:
-            raise NotFound(f"Contract with ID {contract_id} not found.")
-
-        click.secho("📋 Leave any field blank to skip updating it.", fg="cyan")
-
+        # 🆔 Prompt for Event ID
         while True:
-            amount_total = click.prompt("🤑 Total amount of the contract", default="", show_default=False)
-            if amount_total == "":
-                break
-            if amount_total.isdigit():
-                updated_fields["amount_total"] = amount_total
-                click.secho("✅ Total amount updated.", fg="green")
-                break
-            else:
-                click.secho("❌ Please enter digits only.", fg="red")
+            event_id = click.prompt("✏️ Enter the Event ID to update", type=int)
+            event = session.query(Event).filter(Event.event_id == event_id).first()
+            if not event:
+                click.secho(f"❌ No event found with ID {event_id}. Please try again.", fg="red")
+                continue
 
-        while True:
-            amount_due = click.prompt("💰 Remains to pay", default="", show_default=False)
-            if amount_due == "":
-                break
-            if amount_due.isdigit():
-                updated_fields["amount_due"] = amount_due
-                click.secho("✅ Remaining amount updated.", fg="green")
-                break
-            else:
-                click.secho("❌ Please enter digits only.", fg="red")
+            click.secho(f"🔧 Updating event ID {event_id}...", fg="blue")
+            click.secho("📋 Leave any field blank to skip updating it.", fg="cyan")
+            break
 
-        while True:
-            is_signed = click.prompt("✅ Is the contract signed? (True/False)", default="", show_default=False)
-            if is_signed == "":
-                break
-            if is_signed.lower() in ["true", "false"]:
-                updated_fields["is_signed"] = is_signed.lower()
-                click.secho("✅ Contract signature status updated.", fg="green")
-                break
-            else:
-                click.secho("❌ Please enter 'True' or 'False' only.", fg="red")
+        # 📝 Optional fields
+        event_name = click.prompt("📝 New Event Name", default="", show_default=False)
+        if event_name:
+            updated_fields["event_name"] = event_name
+            click.secho("✅ Event name updated.", fg="green")
+
+        start_date = prompt_for_date("📅 New Start Date", required=False)
+        if start_date:
+            updated_fields["start_date"] = start_date
+            click.secho("✅ Start date updated.", fg="green")
+
+        end_date = prompt_for_date("📅 New End Date", required=False)
+        if end_date:
+            updated_fields["end_date"] = end_date
+            click.secho("✅ End date updated.", fg="green")
+
+        location = click.prompt("📍 New Location", default="", show_default=False)
+        if location:
+            updated_fields["location"] = location
+            click.secho("✅ Location updated.", fg="green")
+
+        notes = click.prompt("🗒️ New Notes", default="", show_default=False)
+        if notes:
+            updated_fields["notes"] = notes
+            click.secho("✅ Notes updated.", fg="green")
 
         if not updated_fields:
-            click.secho("⚠️ No changes entered. Nothing to update.", fg="yellow")
+            click.secho("⚠️ No changes entered. Nothing was updated.", fg="yellow")
             return
 
+        # 🧠 Apply changes
         for field, value in updated_fields.items():
-            if hasattr(contract, field):
-                setattr(contract, field, value)
+            if hasattr(event, field):
+                setattr(event, field, value)
 
         session.commit()
-        click.secho(f"✅ Contract with ID {contract_id} has been updated.", fg="green")
+        click.secho(f"✅ Event ID {event_id} updated successfully!", fg="green")
 
     except Exception as e:
         session.rollback()
-        raise e
+        click.secho(f"❌ Error updating event: {e}", fg="red")
+
     finally:
         session.close()
 
 
 # 🔄 Reassign Contract ───────────────────────────────────────────────
-def reassign_event_logic(contract_id: int):
+def reassign_event_logic():
+    """🔄 Reassign the support contact or client for an existing event."""
     session = SessionLocal()
     updated_fields = {}
 
     try:
-        contract = session.query(Contract).filter(Contract.contract_id == contract_id).first()
-        if not contract:
-            raise NotFound(f"Contract with ID {contract_id} not found.")
+        # 🔍 Find the event
+        event_id = click.prompt("🔢 Enter Event ID", type=int)
+        event = session.query(Event).filter(Event.event_id == event_id).first()
+        if not event:
+            raise NotFound(f"❌ Event with ID {event_id} not found.")
 
+        # 👤 Reassign support
         while True:
-            new_commercial_id = click.prompt("👔 Enter the new commercial's user ID", default="", show_default=False)
-            if new_commercial_id == "":
+            new_support_id = click.prompt("👔 Enter the new Support's user ID", default="", show_default=False)
+            if new_support_id == "":
                 break
-            if new_commercial_id.isdigit():
-                new_commercial_id = int(new_commercial_id)
-                new_commercial = session.query(User).filter(
-                    User.user_id == new_commercial_id, User.role == "commercial").first()
-                if not new_commercial:
-                    click.secho(f"❌ User ID {new_commercial_id} is not a valid commercial.", fg="red")
-                    continue
-                updated_fields["commercial_id"] = new_commercial_id
-                click.secho("✅ New commercial assigned.", fg="green")
-                break
-            else:
+            if not new_support_id.isdigit():
                 click.secho("❌ Please enter a valid integer.", fg="red")
+                continue
 
+            new_support = session.query(User).filter(
+                User.user_id == int(new_support_id), User.role == "support"
+            ).first()
+            if not new_support:
+                click.secho(f"❌ User ID {new_support_id} is not a valid support.", fg="red")
+                continue
+
+            updated_fields["support_id"] = int(new_support_id)
+            click.secho("✅ New Support assigned.", fg="green")
+            break
+
+        # 🧑 Reassign client
         while True:
-            new_client_id = click.prompt("👨🏻‍💼 Enter the new client ID", default="", show_default=False)
+            new_client_id = click.prompt("👨🏻‍💼 Enter the new Client ID", default="", show_default=False)
             if new_client_id == "":
                 break
-            if new_client_id.isdigit():
-                new_client_id = int(new_client_id)
-                new_client = session.query(Client).filter(Client.client_id == new_client_id).first()
-                if not new_client:
-                    click.secho(f"❌ Client ID {new_client_id} is not valid.", fg="red")
-                    continue
-                updated_fields["client_id"] = new_client_id
-                click.secho(f"✅ Contract {contract_id} reassigned to new client.", fg="green")
-                break
-            else:
+            if not new_client_id.isdigit():
                 click.secho("❌ Please enter a valid integer.", fg="red")
+                continue
 
+            new_client = session.query(Client).filter(Client.client_id == int(new_client_id)).first()
+            if not new_client:
+                click.secho(f"❌ Client ID {new_client_id} is not valid.", fg="red")
+                continue
+
+            updated_fields["client_id"] = int(new_client_id)
+            click.secho(f"✅ Event '{event.event_name}' reassigned to new client.", fg="green")
+            break
+
+        # 🛑 No updates?
         if not updated_fields:
-            click.secho("⚠️ No changes made to the contract.", fg="yellow")
+            click.secho("⚠️ No changes made to the event.", fg="yellow")
             return
 
-        if "commercial_id" in updated_fields:
-            contract.commercial_id = updated_fields["commercial_id"]
+        # 🧠 Apply updates
+        if "support_id" in updated_fields:
+            event.support_id = updated_fields["support_id"]
         if "client_id" in updated_fields:
-            contract.client_id = updated_fields["client_id"]
+            event.client_id = updated_fields["client_id"]
 
         session.commit()
-        click.secho("✅ Contract updated successfully.", fg="green")
+        click.secho("✅ Event reassignment saved successfully.", fg="green")
 
     except NotFound as nf:
         click.secho(str(nf), fg="red")
@@ -277,17 +339,18 @@ def reassign_event_logic(contract_id: int):
 
 # 🗑️ Delete Contract ────────────────────────────────────────────────
 def delete_event_logic():
+    """🗑️ Delete an event by its ID."""
     session = SessionLocal()
     try:
-        contract_id = click.prompt("🗑️ Enter the contract ID to delete", type=int)
+        event_id = click.prompt("🗑️ Enter the Event ID to delete", type=int)
+        event = session.query(Event).filter(Event.event_id == event_id).first()
 
-        contract = session.query(Contract).filter(Contract.contract_id == contract_id).first()
-        if not contract:
-            raise NotFound(f"Contract with ID {contract_id} not found.")
+        if not event:
+            raise NotFound(f"❌ Event with ID {event_id} not found.")
 
-        session.delete(contract)
+        session.delete(event)
         session.commit()
-        click.secho(f"✅ Contract {contract_id} deleted successfully.", fg="green")
+        click.secho(f"✅ Event ID {event_id} deleted successfully.", fg="green")
 
     except NotFound as nf:
         click.secho(str(nf), fg="red")

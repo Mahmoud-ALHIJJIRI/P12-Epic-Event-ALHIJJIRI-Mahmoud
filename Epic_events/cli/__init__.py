@@ -33,6 +33,7 @@ from .contract import (
 
 from .event import (
     create_event,
+    list_event_details,
     list_events,
     update_event,
     reassign_event,
@@ -82,6 +83,7 @@ cli.add_command(delete_contract, name="delete_contract")
 
 # 📋 Event COMMANDS ───────────────────────────────────────────────
 cli.add_command(create_event, name="create_event")
+cli.add_command(list_event_details, name="list_event_details")
 cli.add_command(list_events, name="list_events")
 cli.add_command(list_client_events, name="list_client_events")
 cli.add_command(update_event, name="update_event")

@@ -19,7 +19,6 @@ def render_contracts_table(contracts, title: str):
                                         "👤 Commercial Ref", "💼 Client Ref"])
     for contract in contracts:
         table.add_row(
-            str(contract.client_id),
             str(contract.contract_id),
             str(contract.amount_total),
             str(contract.amount_due),
@@ -100,11 +99,12 @@ def list_contracts_logic():
 
 
 # 📄 List Contracts for a Client ─────────────────────────────────────
-def list_client_contracts_logic(client_id: int):
+def list_client_contracts_logic():
     """List contracts linked to a specific client."""
     session = SessionLocal()
 
     try:
+        client_id = click.prompt("🔎 Enter Client ID to list attached contracts", type=int)
         contracts = session.query(Contract).filter(Contract.client_id == client_id).all()
 
         if not contracts:
@@ -120,16 +120,23 @@ def list_client_contracts_logic(client_id: int):
 
 
 # 🔧 Update Contract ─────────────────────────────────────────────────
-def update_contract_logic(contract_id: int):
+def update_contract_logic():
     session = SessionLocal()
     updated_fields = {}
 
     try:
-        contract = session.query(Contract).filter(Contract.contract_id == contract_id).first()
-        if not contract:
-            raise NotFound(f"Contract with ID {contract_id} not found.")
+        while True:
+            contract_id = click.prompt("🔢 Enter the contract ID to update", type=int)
+            contract = session.query(Contract).filter(Contract.contract_id == contract_id).first()
 
-        click.secho("📋 Leave any field blank to skip updating it.", fg="cyan")
+            if not contract:
+                click.secho(f"❌  Contract with ID {contract_id} not found.", fg="red")
+                continue
+
+            else:
+                click.secho(f"🔧 Updating contract with ID {contract_id}...", fg="cyan")
+                click.secho("📋 Leave any field blank to skip updating it.", fg="cyan")
+                return
 
         while True:
             amount_total = click.prompt("🤑 Total amount of the contract", default="", show_default=False)
