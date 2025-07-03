@@ -14,7 +14,8 @@ from Epic_events.service.client_service import (
     list_my_clients_logic,
     delete_client_logic,
     update_client_logic,
-    reassign_commercial_logic
+    reassign_commercial_logic,
+    list_client_details_logic,
 )
 
 console = Console()
@@ -117,3 +118,12 @@ def list_clients():
     """🌐 List all clients, regardless of role."""
     render_command_banner("All Clients", "View all client records in the system.")
     list_clients_logic()
+
+
+@client.command(name="list-details")
+@role_required(["gestion", "commercial", "support"])
+def list_client_details():
+    """🔍 Show detailed information for a specific client."""
+    render_command_banner("Client Details",
+                          "Display full client information.")
+    list_client_details_logic()

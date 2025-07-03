@@ -18,8 +18,8 @@ console = Console()
 
 # 🖼️ Utility: Render Client Table ────────────────────────────────────
 def render_clients_table(clients, title: str):
-    table = build_table(title, ["👤 ID", "🧑 Full Name", "📧 Email", "🔐 phone",
-                                        " 🏢 Company", "👤 Commercial Ref"])
+    table = build_table(title, ["👤 ID", "🧑 Full Name", "📧 Email", "🔐 phone", " 🏢 Company",
+                                "👤 Commercial Ref", "Creation date", "Last Contact"])
     for client in clients:
         table.add_row(
             str(client.client_id),
@@ -27,7 +27,9 @@ def render_clients_table(clients, title: str):
             client.email,
             str(client.phone),
             client.company_name,
-            str(client.commercial_id) if client.commercial_id else "Unassigned"
+            str(client.commercial_id) if client.commercial_id else "Unassigned",
+            str(client.created_date),
+            str(client.last_contact)
         )
     console.print(table)
 
@@ -226,5 +228,29 @@ def list_clients_logic():
 
     except Exception as e:
         console.print(f"[red]❌ Error: {e}[/red]")
+    finally:
+        session.close()
+
+
+# 📋 List All Contracts ──────────────────────────────────────────────
+def list_client_details_logic():
+    """📋 Display details for a single event by ID."""
+    session = SessionLocal()
+
+    try:
+        while True:
+            client_id = click.prompt("🔎 Enter the Client ID to show details", type=int)
+            client = session.query(Client).filter(Client.client_id == client_id).first()
+
+            if not client:
+                console.print(f"[yellow]⚠️ No client found with ID {client_id}. Please try again.[/yellow]")
+                continue
+
+            render_clients_table([client], title=f"📋 Event {client_id} Details")
+            return
+
+    except Exception as e:
+        console.print(f"[red]❌ Error: {e}[/red]")
+
     finally:
         session.close()

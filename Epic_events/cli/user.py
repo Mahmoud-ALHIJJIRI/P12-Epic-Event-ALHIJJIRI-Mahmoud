@@ -14,7 +14,8 @@ from Epic_events.service.user_service import (
     get_logged_user_info,
     list_users_logic,
     delete_user_by_id,
-    update_user_role_logic
+    update_user_role_logic,
+    list_user_details_logic,
 )
 
 console = Console()
@@ -142,6 +143,14 @@ def list_users():
     render_command_banner("List Users", "Display all registered users and their roles.")
     click.secho("📋 Listing all users...", fg="cyan")
     list_users_logic()
+
+
+@user.command(name="list-details")
+@role_required(["gestion", "commercial", "support"])
+def list_user_details():
+    """🔍 Show detailed information for a specific user."""
+    render_command_banner("User Details", "Display full event information.")
+    list_user_details_logic()
 
 
 @user.command(name="whoami")

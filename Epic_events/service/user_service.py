@@ -20,10 +20,35 @@ from Epic_events.models import User, UserRole
 from Epic_events.rich_styles import build_table
 from Epic_events.auth.utils import save_token, load_token, decode_token, get_current_user
 
+
 # 🎨 Constants ──────────────────────────────────────────────────────
 ph = PasswordHasher()
 ALGORITHM = "HS256"
 TOKEN_FILE = Path.home() / ".epic_crm_token"
+
+
+# 🖼️ Utility: Render Users Table ───────────────────────────────────────────────
+def render_users_table(users, title: str):
+    """Render a styled Rich table of user entries with emoji-enhanced headers."""
+    console = Console()
+
+    table = build_table(
+        title,
+        [
+            "🆔 User ID", "📝 Event Name", "📧 Email", "👤 Role",
+            "📅 Created at", " 📅 Updated at"
+        ]
+    )
+    for user in users:
+        table.add_row(
+            str(user.user_id),
+            str(user.name),
+            str(user.email),
+            str(user.role),
+            str(user.created_at),
+            str(user.updated_at),
+        )
+    console.print(table)
 
 
 # 👤 USER REGISTRATION ───────────────────────────────────────────────
@@ -245,6 +270,30 @@ def list_users_logic():
             )
 
         console.print(Panel.fit(table, border_style="cyan", title="User Overview"))
+
+    finally:
+        session.close()
+
+
+def list_user_details_logic():
+    """📋 Display details for a single event by ID."""
+    session = SessionLocal()
+    console = Console()
+
+    try:
+        while True:
+            user_id = click.prompt("🔎 Enter the User ID to show details", type=int)
+            user = session.query(User).filter(User.user_id == user_id).first()
+
+            if not user:
+                console.print(f"[yellow]⚠️ No user found with ID {user_id}. Please try again.[/yellow]")
+                continue
+
+            render_users_table([user], title=f"📋 Event {user_id} Details")
+            return
+
+    except Exception as e:
+        console.print(f"[red]❌ Error: {e}[/red]")
 
     finally:
         session.close()
