@@ -1,7 +1,11 @@
-# 🧩 External Imports ────────────────────────────────────────────────
-import click
+# 🥉 External Imports ──────────────────────────────────────────
+import rich_click as click
+from rich.console import Console
+from rich.panel import Panel
+from rich.text import Text
+from rich.align import Align
 
-# 🏗️ Internal Imports ────────────────────────────────────────────────
+# 🏗️ Internal Imports ──────────────────────────────────────────
 from Epic_events.models import Contract
 from Epic_events.auth.permissions import role_required, owner_required
 from Epic_events.service.contract_service import (
@@ -13,52 +17,86 @@ from Epic_events.service.contract_service import (
     reassign_contract_logic
 )
 
+console = Console()
 
-# 📝 CLI Command: Create Contract ─────────────────────────────────────
-@click.command()
+# 🔹 Reusable Banner Function ──────────────────────────────
+
+def render_command_banner(title: str, message: str):
+    banner = Panel(
+        Text(message, justify="left", style="bold yellow"),
+        title=f"[bold magenta]{title}[/bold magenta]",
+        subtitle="[italic cyan]Your Command-Line CRM[/italic cyan]",
+        border_style="green",
+        padding=(1, 2),
+        expand=False
+    )
+    console.print(Align.left(banner))
+
+
+@click.group(
+    cls=click.RichGroup,
+    help="📋 Manage contracts: creation, update, deletion, and listing."
+)
+@click.pass_context
+def contract(ctx):
+    """📋 Contract Commands"""
+
+    if ctx.invoked_subcommand:
+        render_command_banner(
+            "📋 Contract Command Group",
+            "Manage contracts for client events, including creation,\nstatus updates, payment tracking, and assignments."
+        )
+
+
+# 📝 CLI Command: Create Contract ───────────────────────────
+@contract.command()
 @role_required(["gestion"])
 def create_contract():
     """📝 Create a new contract (gestion only)."""
+    render_command_banner("Create Contract", "Create and initialize a new event contract for a client.")
     create_contract_logic()
 
 
-# 📋 CLI Commands: Contract Listings ──────────────────────────────────
-@click.command()
+# 📋 CLI Commands: Contract Listings ───────────────────────────
+@contract.command()
 @role_required(["gestion", "commercial", "support"])
 def list_contracts():
     """📋 List all contracts in the system."""
+    render_command_banner("List Contracts", "View all contracts regardless of status or assignment.")
     list_contracts_logic()
 
 
-@click.command()
+@contract.command()
 @role_required(["gestion", "commercial", "support"])
 def list_client_contracts():
     """📄 List contracts linked to a specific client."""
+    render_command_banner("Client Contracts", "Display all contracts associated with a selected client.")
     list_client_contracts_logic()
 
 
-# 🔧 CLI Command: Update Contract ─────────────────────────────────────
-@click.command()
+# 🔧 CLI Command: Update Contract ────────────────────────────
+@contract.command()
 @owner_required(Contract, owner_field="commercial_id", id_arg="contract_id")
 def update_contract():
-    """
-    🔧 Update a contract's information (only if you are the assigned commercial or part of 'gestion').
-    """
+    """🔧 Update a contract's information (only if you are the assigned commercial or part of 'gestion')."""
+    render_command_banner("Update Contract", "Modify the payment status or terms of an existing contract.")
     update_contract_logic()
 
 
-# 🔄 CLI Command: Reassign Contract ───────────────────────────────────
-@click.command()
+# 🔄 CLI Command: Reassign Contract ───────────────────────────
+@contract.command()
 @role_required(["gestion"])
 def reassign_contract():
     """🔄 Reassign a client or commercial to an existing contract (gestion only)."""
-    contract_id = click.prompt("🔢 Enter contract ID", type=int)
+    render_command_banner("Reassign Contract", "Reassign the client or commercial contact tied to a contract.")
+    contract_id = click.prompt("🔹 Enter contract ID", type=int)
     reassign_contract_logic(contract_id)
 
 
-# 🗑️ CLI Command: Delete Contract ─────────────────────────────────────
-@click.command("delete_contract")
+# 🗑️ CLI Command: Delete Contract ───────────────────────────
+@contract.command("delete_contract")
 @role_required(["gestion"])
 def delete_contract():
     """🗑️ Delete a contract by ID (gestion only)."""
+    render_command_banner("Delete Contract", "Permanently remove a contract from the system by its ID.")
     delete_contract_logic()

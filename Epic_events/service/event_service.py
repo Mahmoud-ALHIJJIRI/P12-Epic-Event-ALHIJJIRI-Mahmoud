@@ -199,7 +199,7 @@ def list_client_events_logic():
 
 
 # 🔧 Update Contract ─────────────────────────────────────────────────
-def update_event_logic():
+def update_event_logic(event_id: int):
     """🔧 Update an event's details interactively via the CLI."""
     session = SessionLocal()
     updated_fields = {}
@@ -207,7 +207,7 @@ def update_event_logic():
     try:
         # 🆔 Prompt for Event ID
         while True:
-            event_id = click.prompt("✏️ Enter the Event ID to update", type=int)
+            event_id = click.prompt("✏️ Confirm the Event ID to update", type=int)
             event = session.query(Event).filter(Event.event_id == event_id).first()
             if not event:
                 click.secho(f"❌ No event found with ID {event_id}. Please try again.", fg="red")

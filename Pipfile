@@ -13,6 +13,8 @@ argon2-cffi = "*"
 pyjwt = "*"
 alembic = "*"
 werkzeug = "*"
+rich-click = "*"
+pyfiglet = "*"
 
 [dev-packages]
 
