@@ -9,6 +9,8 @@ from werkzeug.exceptions import NotFound
 from Epic_events.database import SessionLocal
 from Epic_events.models import Client, User, Contract, Event
 from Epic_events.rich_styles import build_table
+from Epic_events.service.user_service import get_logged_in_user
+
 
 # 🎨 Rich Console Setup ──────────────────────────────────────────────
 console = Console()
@@ -170,6 +172,27 @@ def list_events_logic():
     except Exception as e:
         console.print(f"[red]❌ Error while listing events: {e}[/red]")
 
+    finally:
+        session.close()
+
+
+# 📋 List My Events ─────────────────────────────────────────────────
+def list_my_events_logic():
+    """List clients assigned to the logged-in commercial user only."""
+    user = get_logged_in_user()
+    session = SessionLocal()
+
+    try:
+        events = session.query(Event).filter(Event.support_id == user.user_id).all()
+
+        if not events:
+            console.print("[yellow]⚠️ You have no clients assigned.[/yellow]")
+            return
+
+        render_events_table(events, title=f"📋 Event Assigned to {user.name}")
+
+    except Exception as e:
+        console.print(f"[red]❌ Error: {e}[/red]")
     finally:
         session.close()
 

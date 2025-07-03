@@ -15,6 +15,7 @@ from Epic_events.service.event_service import (
     update_event_logic,
     delete_event_logic,
     list_client_events_logic,
+    list_my_events_logic,
     reassign_event_logic
 )
 
@@ -68,6 +69,16 @@ def list_events():
     """📋 List all events in the system."""
     render_command_banner("List Events", "View all scheduled events across all departments.")
     list_events_logic()
+
+
+# 📋 CLI Commands: Client Listings ───────────────────────────
+@event.command(name="list-my-event")
+@role_required(["support"])
+def list_my_events():
+    """📋 List Events assigned to the logged-in support user only."""
+    render_command_banner("My Events",
+                          "Display only the Events assigned to your user account.")
+    list_my_events_logic()
 
 
 @event.command(name="list-client")
