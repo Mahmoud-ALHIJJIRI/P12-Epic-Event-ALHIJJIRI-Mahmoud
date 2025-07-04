@@ -1,3 +1,11 @@
+"""
+🚀 Main Application Entry Point for Epic Events CRM
+
+This script initializes Sentry, the database schema, and launches the command-line interface (CLI)
+with a stylized welcome and banner screen. It also captures and reports unexpected errors to Sentry.
+"""
+
+# 📦 Module Imports ──────────────────────────────────────────────────
 # ─── 🎨 Visual Imports ────────────────────────────────────────────────
 from rich.console import Console
 from rich.panel import Panel
@@ -8,18 +16,13 @@ from pyfiglet import Figlet
 # ─── 🧠 Application Imports ───────────────────────────────────────────
 from Epic_events.database import init_db
 from Epic_events.cli import cli
+from Epic_events.sentry import init_sentry
 
 # ─── 🌍 External Imports ───────────────────────────────────────────
 import sentry_sdk
-import os
 
 # 🔐 Initialize Sentry
-sentry_sdk.init(
-    dsn=os.getenv("SENTRY_DSN"),  # 🔐 Your DSN is securely loaded from .env
-    send_default_pii=True,        # 🛡️ Include user data (e.g., emails) if set
-    environment="production",     # 🌍 Useful to separate dev vs prod
-    traces_sample_rate=1.0        # ⚡ Optional: Enables performance monitoring
-)
+init_sentry()
 
 # ─── 🖥️ Console Setup ─────────────────────────────────────────────────
 console = Console()
@@ -27,8 +30,19 @@ console = Console()
 
 # ─── 🚀 Main Entry Point ──────────────────────────────────────────────
 def main():
+    """
+    Launch the CRM application:
+    - Initializes Sentry
+    - Sets up the database
+    - Displays styled banners
+    - Starts the CLI interface
+    """
+    # 🔐 Initialize Sentry
+    init_sentry()
+
     # 📂 Initialize the database
     init_db()
+
     # ✅ Show styled startup success panel
     console.print(
         Panel.fit(
@@ -61,6 +75,10 @@ def main():
     cli()
 
 
-# ─── 🔁 Run as script ─────────────────────────────────────────────────
+# 🧪 Entry Point: Run Script with Error Handling and Sentry Logging ──────
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        sentry_sdk.capture_exception(e)  # ✅ Log any uncaught errors to Sentry
+        raise

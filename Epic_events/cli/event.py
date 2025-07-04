@@ -1,3 +1,10 @@
+"""
+🎉 Event Command Handlers for Epic Events CRM
+
+This module defines CLI commands for managing client events, including creation, updates, reassignment,
+deletion, and detailed views. Permissions are enforced based on role or ownership.
+"""
+
 # 🥉 External Imports ──────────────────────────────────────────
 import rich_click as click
 from rich.console import Console
@@ -22,8 +29,7 @@ from Epic_events.service.event_service import (
 console = Console()
 
 
-# 🔹 Reusable Banner Function ──────────────────────────────
-
+# 🖼️ Utility for rendering rich command banners ───────────────────────────
 def render_command_banner(title: str, message: str):
     banner = Panel(
         Text(message, justify="left", style="bold yellow"),
@@ -44,7 +50,10 @@ def render_command_banner(title: str, message: str):
 )
 @click.pass_context
 def event(ctx):
-    """🎉 Event Commands"""
+    """🎉 Event Commands
+
+    Command group for planning, updating, assigning, and tracking events related to signed client contracts.
+    """
 
     if ctx.invoked_subcommand:
         render_command_banner(
@@ -57,7 +66,7 @@ def event(ctx):
 @event.command(name="create")
 @role_required(["gestion", "commercial"])
 def create():
-    """📝 Create a new event (gestion only)."""
+    """📝 Create a new event (gestion or commercial)."""
     render_command_banner("Create Event", "Create a new event for a client with a signed contract.")
     create_event_logic()
 
@@ -66,7 +75,7 @@ def create():
 @event.command(name="list")
 @role_required(["gestion", "commercial", "support"])
 def list_events():
-    """📋 List all events in the system."""
+    """📋 List all events in the system (all roles)."""
     render_command_banner("List Events", "View all scheduled events across all departments.")
     list_events_logic()
 
@@ -75,7 +84,7 @@ def list_events():
 @event.command(name="list-my-event")
 @role_required(["support"])
 def list_my_events():
-    """📋 List Events assigned to the logged-in support user only."""
+    """📋 List events assigned to the logged-in support user."""
     render_command_banner("My Events",
                           "Display only the Events assigned to your user account.")
     list_my_events_logic()
@@ -84,7 +93,7 @@ def list_my_events():
 @event.command(name="list-client")
 @role_required(["gestion", "commercial", "support"])
 def list_client_events():
-    """📄 List events linked to a specific client."""
+    """📄 List all events associated with a specific client."""
     render_command_banner("List Client Events", "View all events associated with a selected client.")
     list_client_events_logic()
 
@@ -102,7 +111,7 @@ def list_event_details():
 @click.option("--event-id", type=int, prompt="🔹 Enter the Event ID to update")
 @owner_required(Event, owner_field="support_id", id_arg="event_id")
 def update_event(event_id):
-    """🔧 Update event details (only if you are support or part of 'gestion')."""
+    """🔧 Update event details (support or gestion only)."""
     render_command_banner("Update Event", "Modify event details like location, time, and assigned staff.")
     update_event_logic(event_id)
 
@@ -110,7 +119,7 @@ def update_event(event_id):
 @event.command(name="reassign")
 @role_required(["gestion"])
 def reassign_event():
-    """🔄 Reassign a support or client to an existing event (gestion only)."""
+    """🔄 Reassign support or client for an event (gestion only)."""
     render_command_banner("Reassign Event", "Reassign the support contact or client attached to an event.")
     reassign_event_logic()
 

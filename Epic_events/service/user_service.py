@@ -1,7 +1,15 @@
+"""
+👤 User Service Logic for Epic Events CRM
+
+This module contains all backend logic for user management including registration, login,
+logout, role updates, deletion, and listing. It integrates JWT authentication, password hashing,
+and Sentry logging for error and event tracking.
+"""
 # 🧩 External Imports ───────────────────────────────────────────────
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
+import sentry_sdk
 
 import click
 import jwt
@@ -82,22 +90,42 @@ def register_user_logic(name, email, password, role):
     session = SessionLocal()
 
     try:
+        # 🔁 Validate the role
         user_role_enum = UserRole(role)
     except ValueError:
         click.echo(f"❌ Invalid role '{role}'.")
         session.close()
         return
 
+    # 🔐 Hash password and create user object
     hashed_pw = ph.hash(password)
-    user = User(name=name, email=email, password=hashed_pw, role=user_role_enum)
+    new_user = User(name=name, email=email, password=hashed_pw, role=user_role_enum)
 
     try:
-        session.add(user)
+        session.add(new_user)
         session.commit()
         click.echo("✅ User registered successfully!")
+
+        # ✅ Sentry log for creation
+        sentry_sdk.capture_message(
+            f"👤 New user created: {name} (role={role})",
+            level="info"
+        )
+
     except IntegrityError:
         session.rollback()
         click.echo("❌ Email already in use.")
+        # ⚠️ Log duplicate email attempt to Sentry
+        sentry_sdk.capture_message(
+            f"⚠️ Attempt to register with duplicate email: {email}",
+            level="warning"
+        )
+
+    except Exception as e:
+        session.rollback()
+        sentry_sdk.capture_exception(e)  # ✅ Log unexpected error
+        click.echo("❌ Unexpected error during user registration.")
+
     finally:
         session.close()
 
@@ -106,6 +134,7 @@ def register_user_logic(name, email, password, role):
 def login_user(email, password):
     """Authenticate user and store JWT."""
     session = SessionLocal()
+
     user = session.query(User).filter_by(email=email).first()
 
     if not user:
@@ -208,10 +237,15 @@ def delete_user_by_id(user_id: int):
 
         session.delete(user)
         session.commit()
+        sentry_sdk.capture_message(
+            f"👤 user with ID: {user.user_id} name: {user.name} role: {user.role}) has been deleted.",
+            level="info"
+        )
         return True
 
     except Exception as e:
         session.rollback()
+        sentry_sdk.capture_exception(e)
         raise e
 
     finally:
@@ -236,11 +270,16 @@ def update_user_role_logic(user_id: int, role: str):
             return False
 
         user.role = UserRole(role)
+        sentry_sdk.capture_message(
+            f"👤 the user ID: {user.user_id} Name: {user.name} has been updated",
+            level="info"
+        )
         session.commit()
         return True
 
     except Exception as e:
         session.rollback()
+        sentry_sdk.capture_exception()
         click.echo(f"❌ Error updating role: {e}", err=True)
         return False
 

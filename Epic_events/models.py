@@ -1,3 +1,12 @@
+"""
+🧱 SQLAlchemy ORM Models for Epic Events CRM
+
+This module defines all the database models used in the CRM application:
+Users, Clients, Contracts, and Events. Relationships between models are
+established to reflect business logic and ensure data integrity.
+"""
+
+# 📦 External & Internal Imports ───────────────────────────────────────
 # ─── External Imports ───────────────────────────────────────────────
 from sqlalchemy import Column, Integer, String, Enum, DateTime, ForeignKey, Boolean
 from sqlalchemy.dialects.mysql import VARCHAR

@@ -1,8 +1,16 @@
+"""
+🗄️ Database Configuration for Epic Events CRM
+
+This module sets up the SQLAlchemy engine, session, and base class.
+It also provides a function to initialize the database schema using all defined models.
+"""
+
 # ─── External Imports ───────────────────────────────────────────────
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-# ─── Internal Imports ───────────────────────────────────────────────
+
+# ⚙️ Load Configuration ─────────────────────────────────────────────
 from .config import DATABASE_URL  # Cleanly imported from config
 
 
@@ -17,7 +25,7 @@ Base = declarative_base()
 # 🚀 INIT DATABASE SCHEMA ────────────────────────────────────────────
 def init_db():
     """
-    Import models and create tables if they don't exist.
+    Initialize the database by importing all models and creating tables if they do not exist.
     """
     from .models import User, Client, Contract, Event  # Ensure models are loaded
     Base.metadata.create_all(bind=engine)

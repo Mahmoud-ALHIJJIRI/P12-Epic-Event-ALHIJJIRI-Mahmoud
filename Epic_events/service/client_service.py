@@ -1,3 +1,11 @@
+"""
+👥 Client Business Logic Layer for Epic Events CRM
+
+This module provides all backend logic for managing client data including creation,
+updates, deletion, reassignment, and listing. It communicates with the database and
+enforces validations before changes are made.
+"""
+
 # 🧩 External Imports ────────────────────────────────────────────────
 import click
 from rich.console import Console
@@ -12,11 +20,11 @@ from Epic_events.models import Client, User
 from Epic_events.service.user_service import get_logged_in_user
 from Epic_events.rich_styles import build_table
 
-# 🎨 Rich Console Setup ──────────────────────────────────────────────
+# 🎨 Rich Console Instance ─────────────────────────────────────────────
 console = Console()
 
 
-# 🖼️ Utility: Render Client Table ────────────────────────────────────
+# 🖼️ Utility: Render a rich table of clients ─────────────────────────────
 def render_clients_table(clients, title: str):
     table = build_table(title, ["👤 ID", "🧑 Full Name", "📧 Email", "🔐 phone", " 🏢 Company",
                                 "👤 Commercial Ref", "Creation date", "Last Contact"])
@@ -34,7 +42,7 @@ def render_clients_table(clients, title: str):
     console.print(table)
 
 
-# 📝 Create Client ───────────────────────────────────────────────────
+# 📝 Register a New Client ──────────────────────────────────────────────
 def register_client_logic():
     """Register a new client (commercial only)."""
     session = SessionLocal()
@@ -76,7 +84,7 @@ def register_client_logic():
         session.close()
 
 
-# 🛠️ Update Client ──────────────────────────────────────────────────
+# 🔧 Update an Existing Client ─────────────────────────────────────────────
 def update_client_logic(client_id: int):
     session = SessionLocal()
     now = datetime.now(UTC)
@@ -143,7 +151,7 @@ def update_client_logic(client_id: int):
         session.close()
 
 
-# 🔄 Reassign Client Commercial ──────────────────────────────────────
+# 🔄 Reassign Commercial to Client ─────────────────────────────────────
 def reassign_commercial_logic(client_id: int, new_commercial_id: int):
     session = SessionLocal()
     try:
@@ -167,7 +175,7 @@ def reassign_commercial_logic(client_id: int, new_commercial_id: int):
         session.close()
 
 
-# 🗑️ Delete Client ──────────────────────────────────────────────────
+# 🗑️ Delete a Client ─────────────────────────────────────────────────────
 def delete_client_logic(client_id: int):
     session = SessionLocal()
     try:
@@ -190,7 +198,7 @@ def delete_client_logic(client_id: int):
         session.close()
 
 
-# 📋 List My Clients ─────────────────────────────────────────────────
+# 📋 List Clients Assigned to Logged-in Commercial ────────────────────────
 def list_my_clients_logic():
     """List clients assigned to the logged-in commercial user only."""
     user = get_logged_in_user()
@@ -211,7 +219,7 @@ def list_my_clients_logic():
         session.close()
 
 
-# 🌐 List All Clients ────────────────────────────────────────────────
+# 🌐 List All Clients ───────────────────────────────────────────────────────
 def list_clients_logic():
     """List all clients, regardless of role."""
     get_logged_in_user()
@@ -232,7 +240,7 @@ def list_clients_logic():
         session.close()
 
 
-# 📋 List All Contracts ──────────────────────────────────────────────
+# 🔍 Display Details for a Specific Client ───────────────────────────────
 def list_client_details_logic():
     """📋 Display details for a single event by ID."""
     session = SessionLocal()

@@ -1,3 +1,9 @@
+"""
+👥 Client Command Handlers for Epic Events CRM
+
+This module defines CLI commands for managing clients: registration, update, deletion, reassignment,
+and listings. It uses role-based and ownership-based permissions to ensure secure access control.
+"""
 # 🥉 External Imports ──────────────────────────────────────────
 import rich_click as click
 from rich.console import Console
@@ -20,7 +26,7 @@ from Epic_events.service.client_service import (
 
 console = Console()
 
-# 🔹 Reusable Banner Function ──────────────────────────────
+# 🖼️ Utility function for CLI banners ──────────────────────────────────────
 
 
 def render_command_banner(title: str, message: str):
@@ -42,8 +48,10 @@ def render_command_banner(title: str, message: str):
 )
 @click.pass_context
 def client(ctx):
-    """👥 Client Commands"""
+    """👥 Client Commands
 
+    Command group for creating, updating, listing, and managing clients and their assigned commercials.
+    """
     if ctx.invoked_subcommand:
         render_command_banner(
             "👥 Client Command Group",
@@ -64,7 +72,7 @@ def register_client():
 @click.option("--client-id", type=int, prompt="🔹 Enter the client ID to update")
 @owner_required(Client, owner_field="commercial_id", id_arg="client_id")
 def update_client(client_id):
-    """🔧 Update a client's information (only if you are the assigned commercial or part of 'gestion')."""
+    """🔧 Update a client's information (commercial owner or gestion)."""
     render_command_banner("Update Client", "Update a client's contact information or business name.")
     update_client_logic(client_id)
 
@@ -94,7 +102,7 @@ def reassign_commercial():
 @click.option("--client-id", type=int, prompt="🗑️ Enter the client ID to delete")
 @owner_required(Client, owner_field="commercial_id", id_arg="client_id")
 def delete_client(client_id):
-    """🗑️ Delete a client by ID (if you are the owner or part of 'gestion team')."""
+    """🗑️ Delete a client by ID (owner or gestion only)."""
     render_command_banner("Delete Client", "Permanently remove a client profile from the system.")
     try:
         message = delete_client_logic(client_id)
@@ -107,7 +115,7 @@ def delete_client(client_id):
 @client.command(name="list-my-clients")
 @role_required(["commercial"])
 def list_my_clients():
-    """📋 List clients assigned to the logged-in commercial user only."""
+    """📋 List only the clients assigned to the logged-in commercial."""
     render_command_banner("My Clients", "Display only the clients assigned to your user account.")
     list_my_clients_logic()
 
@@ -115,7 +123,7 @@ def list_my_clients():
 @client.command(name="list-clients")
 @role_required(["commercial", "gestion", "support"])
 def list_clients():
-    """🌐 List all clients, regardless of role."""
+    """🌐 List all clients (visible to all roles)."""
     render_command_banner("All Clients", "View all client records in the system.")
     list_clients_logic()
 
@@ -123,7 +131,7 @@ def list_clients():
 @client.command(name="list-details")
 @role_required(["gestion", "commercial", "support"])
 def list_client_details():
-    """🔍 Show detailed information for a specific client."""
+    """🔍 Show detailed information for a specific client (all roles)."""
     render_command_banner("Client Details",
                           "Display full client information.")
     list_client_details_logic()

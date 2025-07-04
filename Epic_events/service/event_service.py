@@ -1,3 +1,11 @@
+"""
+🎉 Event Business Logic for Epic Events CRM
+
+This module provides backend logic for managing event creation, updates, deletions,
+reassignments, and listings. It connects user input to database operations using SQLAlchemy
+and Click for interaction.
+"""
+
 # 🧩 External Imports ────────────────────────────────────────────────
 import click
 from rich.console import Console
@@ -12,11 +20,11 @@ from Epic_events.rich_styles import build_table
 from Epic_events.service.user_service import get_logged_in_user
 
 
-# 🎨 Rich Console Setup ──────────────────────────────────────────────
+# 🎨 Rich Console Instance ─────────────────────────────────────────────
 console = Console()
 
 
-# 🖼️ Utility: Render Events Table ───────────────────────────────────────────────
+# 🖼️ Utility: Render Events Table ──────────────────────────────────────
 def render_events_table(events, title: str):
     """Render a styled Rich table of event entries with emoji-enhanced headers."""
     table = build_table(
@@ -40,7 +48,7 @@ def render_events_table(events, title: str):
     console.print(table)
 
 
-# 🧠 Utility: Prompt for a DateTime ─────────────────────────────────────────────
+# 🧠 Utility: Prompt for a DateTime ────────────────────────────────────
 def prompt_for_date(label, required=True):
     """
     Prompt the user to input a datetime in format 'DD-MM-YYYY HH:MM'.
@@ -67,7 +75,7 @@ def prompt_for_date(label, required=True):
             click.secho("❌ Invalid date format. Please use 'DD-MM-YYYY HH:MM'.", fg="red")
 
 
-# 📝 Create Contract ─────────────────────────────────────────────────
+# 📝 Create Event ──────────────────────────────────────────────────────
 def create_event_logic():
     """📌 Create a new event and link it to a contract, client, and support user."""
     session = SessionLocal()
@@ -138,7 +146,7 @@ def create_event_logic():
         session.close()
 
 
-# 📋 List All Contracts ──────────────────────────────────────────────
+# 🔍 View Event Details by ID ─────────────────────────────────────
 def list_event_details_logic():
     """📋 Display details for a single event by ID."""
     session = SessionLocal()
@@ -162,7 +170,7 @@ def list_event_details_logic():
         session.close()
 
 
-# 📋 List All Contracts ──────────────────────────────────────────────
+# 📋 List All Events ─────────────────────────────────────────────────────
 def list_events_logic():
     """📋 List all events, regardless of user role."""
     session = SessionLocal()
@@ -183,7 +191,7 @@ def list_events_logic():
         session.close()
 
 
-# 📋 List My Events ─────────────────────────────────────────────────
+# 📋 List Events for Logged-in Support ────────────────────────────────
 def list_my_events_logic():
     """List clients assigned to the logged-in commercial user only."""
     user = get_logged_in_user()
@@ -204,7 +212,7 @@ def list_my_events_logic():
         session.close()
 
 
-# 📄 List Contracts for a Client ─────────────────────────────────────
+# 📄 List Events for a Client ───────────────────────────────────────
 def list_client_events_logic():
     """📄 List all events linked to a specific client."""
     session = SessionLocal()
@@ -228,7 +236,7 @@ def list_client_events_logic():
         session.close()
 
 
-# 🔧 Update Contract ─────────────────────────────────────────────────
+# 🔧 Update Event ───────────────────────────────────────────────────────
 def update_event_logic(event_id: int):
     """🔧 Update an event's details interactively via the CLI."""
     session = SessionLocal()
@@ -293,7 +301,7 @@ def update_event_logic(event_id: int):
         session.close()
 
 
-# 🔄 Reassign Contract ───────────────────────────────────────────────
+# 🔄 Reassign Event ────────────────────────────────────────────────────
 def reassign_event_logic():
     """🔄 Reassign the support contact or client for an existing event."""
     session = SessionLocal()
@@ -367,7 +375,7 @@ def reassign_event_logic():
         session.close()
 
 
-# 🗑️ Delete Contract ────────────────────────────────────────────────
+# 🗑️ Delete Event ───────────────────────────────────────────────────────
 def delete_event_logic():
     """🗑️ Delete an event by its ID."""
     session = SessionLocal()

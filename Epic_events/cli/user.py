@@ -1,3 +1,11 @@
+"""
+👤 User Command Handlers for Epic Events CRM
+
+This module provides CLI commands to manage users, including authentication, registration,
+role updates, deletions, and user information display. Access control and Sentry tracking
+are integrated to ensure secure operations.
+"""
+
 # 🥉 External Imports ──────────────────────────────────────────
 import rich_click as click
 from rich.console import Console
@@ -6,7 +14,7 @@ from rich.text import Text
 from rich.align import Align
 
 # 🏗️ Internal Imports ──────────────────────────────────────────
-from Epic_events.auth.permissions import role_required
+from Epic_events.auth.permissions import role_required, attach_sentry_user
 from Epic_events.service.user_service import (
     register_user_logic,
     login_user,
@@ -20,9 +28,8 @@ from Epic_events.service.user_service import (
 
 console = Console()
 
-# 🔹 Reusable Banner Function ──────────────────────────────
 
-
+# 🖼️ Utility for rendering rich CLI banners ─────────────────────────────
 def render_command_banner(title: str, message: str):
     banner = Panel(
         Text(message, justify="left", style="bold yellow"),
@@ -42,7 +49,10 @@ def render_command_banner(title: str, message: str):
 )
 @click.pass_context
 def user(ctx):
-    """👤 User Commands"""
+    """👤 User Commands
+
+    Command group for managing user accounts: login, registration, role updates, deletion, and info.
+    """
 
     # Print the banner when group is called
     if ctx.invoked_subcommand:
@@ -72,10 +82,11 @@ def logout():
 
 
 # 📝 CLI Commands: User Registration ───────────────────────────
-@user.command()
+@user.command(name="register-admin")
 def register_admin():
     """👑 Register the first admin user (role: 'gestion')."""
-    render_command_banner("Register Admin", "Create the first administrative user with gestion privileges.")
+    render_command_banner("Register Admin",
+                          "Create the first administrative user with gestion privileges.")
     click.secho("👑 Registering a new admin user...", fg="cyan")
     name = click.prompt("🧑 Name")
     email = click.prompt("📧 Email")
@@ -84,7 +95,8 @@ def register_admin():
     register_user_logic(name, email, password, role)
 
 
-@user.command()
+@user.command(name="register-user")
+@attach_sentry_user
 @role_required(["gestion"])
 def register_user():
     """➕ Register a new user (requires 'gestion' privileges)."""
@@ -98,7 +110,8 @@ def register_user():
 
 
 # 🛠️ CLI Commands: User Management ──────────────────────────
-@user.command()
+@user.command(name="update-user-role")
+@attach_sentry_user
 @role_required(["gestion"])
 def update_user_role():
     """🛠️ Change a user's role (requires 'gestion' privileges)."""
@@ -120,7 +133,8 @@ def update_user_role():
         click.secho(f"❌ Failed to update role for user {user_id}. User may not exist or an error occurred.", fg="red")
 
 
-@user.command()
+@user.command(name="delete")
+@attach_sentry_user
 @role_required(["gestion"])
 def delete_user():
     """🗑️ Delete a user by their ID (requires 'gestion' privileges)."""

@@ -1,5 +1,14 @@
+"""
+📄 Contract Business Logic for Epic Events CRM
+
+This module contains backend logic for managing contracts: creating, listing, updating,
+deleting, and reassigning contracts. It handles database interactions and enforces role-based validation
+for secure and consistent operations across the CRM.
+"""
+
 # 🧩 External Imports ────────────────────────────────────────────────
 import click
+import sentry_sdk
 from rich.console import Console
 from datetime import datetime, UTC
 from werkzeug.exceptions import NotFound
@@ -104,7 +113,7 @@ def list_contracts_logic():
         session.close()
 
 
-# 📋 List My Clients ─────────────────────────────────────────────────
+# 📋 List Contracts for Logged-in Commercial ───────────────────────
 def list_my_contracts_logic():
     """List clients assigned to the logged-in commercial user only."""
     user = get_logged_in_user()
@@ -125,6 +134,7 @@ def list_my_contracts_logic():
         session.close()
 
 
+# ❗ List Unsigned Contracts ─────────────────────────────────────
 def list_not_signed_contract_logic():
     """List clients not signed."""
     session = SessionLocal()
@@ -142,7 +152,7 @@ def list_not_signed_contract_logic():
         session.close()
 
 
-# 📋 List Event's Details ──────────────────────────────────────────────
+# 🔍 View Contract Details by ID ──────────────────────────────────
 def list_contract_details_logic():
     """📋 Display details for a single event by ID."""
     session = SessionLocal()
@@ -198,7 +208,7 @@ def update_contract_logic(contract_id: int):
 
             if not contract:
                 click.secho(f"❌  Contract with ID {contract_id} not found.", fg="red")
-                continue
+                return
 
             else:
                 click.secho(f"🔧 Updating contract with ID {contract_id}...", fg="cyan")
@@ -228,15 +238,20 @@ def update_contract_logic(contract_id: int):
                 click.secho("❌ Please enter digits only.", fg="red")
 
         while True:
-            is_signed = click.prompt("✅ Is the contract signed? (True/False)", default="", show_default=False)
+            is_signed = click.prompt("✅ Is the contract signed now? (True)", default="", show_default=False)
             if is_signed == "":
                 break
-            if is_signed.lower() in ["true", "false"]:
+            if is_signed.lower() in ["true"]:
                 updated_fields["is_signed"] = is_signed.lower() == "true"
                 click.secho("✅ Contract signature status updated.", fg="green")
+                sentry_sdk.capture_message(
+                    f"✅ Contract with ID {contract_id} has been signed.",
+                    level="info"
+                )
                 break
             else:
-                click.secho("❌ Please enter 'True' or 'False' only.", fg="red")
+                click.secho("❌ Please enter 'True' only if "
+                            "contract is signed or leave it empty.", fg="red")
 
         if not updated_fields:
             click.secho("⚠️ No changes entered. Nothing to update.", fg="yellow")
@@ -251,6 +266,7 @@ def update_contract_logic(contract_id: int):
 
     except Exception as e:
         session.rollback()
+        sentry_sdk.capture_exception(e)  # ✅ Log unexpected error
         raise e
     finally:
         session.close()

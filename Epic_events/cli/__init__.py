@@ -1,3 +1,11 @@
+#
+"""
+🎯 CLI Entry Point for Epic Events CRM
+
+This file defines the root Click group and integrates all subcommands (user, client, contract, event)
+into a unified interface for command-line interaction.
+"""
+
 # ─── External Imports ───────────────────────────────────────────────
 import rich_click as click
 from rich.console import Console
@@ -19,16 +27,17 @@ def cli(ctx):
     📦 Epic Events CRM CLI
 
     Use this interface to manage users, clients, contracts, and events.
-    Type --help after any command for more info.
+    Type --help after any command for detailed usage information.
     """
     # No banner or panel needed here anymore (handled in main.py)
     pass
 
-# 👤 USER COMMANDS ───────────────────────────────────────────────────
+
+# 👤 Add user command group (login, registration, etc.)
 cli.add_command(user)
-# 🧑‍💼 CLIENT COMMANDS ───────────────────────────────────────────────
+# 🧑‍💼 Add client command group (CRUD for client data)
 cli.add_command(client)
-# 📋 CONTRACT COMMANDS ───────────────────────────────────────────────
+# 📋 Add contract command group (create, update, filter contracts)
 cli.add_command(contract)
-# 📋 Event COMMANDS ───────────────────────────────────────────────
+# 🎉 Add event command group (assign support, view event details)
 cli.add_command(event)

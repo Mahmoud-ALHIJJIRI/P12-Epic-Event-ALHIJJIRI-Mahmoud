@@ -1,3 +1,10 @@
+"""
+📄 Contract Command Handlers for Epic Events CRM
+
+This module defines CLI commands for managing contracts: creation, updates, deletion, reassignment,
+and listings. Permissions are enforced to ensure that only authorized roles can act on contracts.
+"""
+
 # 🥉 External Imports ──────────────────────────────────────────
 import rich_click as click
 from rich.console import Console
@@ -7,7 +14,7 @@ from rich.align import Align
 
 # 🏗️ Internal Imports ──────────────────────────────────────────
 from Epic_events.models import Contract
-from Epic_events.auth.permissions import role_required, owner_required
+from Epic_events.auth.permissions import role_required, owner_required, attach_sentry_user
 from Epic_events.service.contract_service import (
     create_contract_logic,
     list_contracts_logic,
@@ -23,7 +30,7 @@ from Epic_events.service.contract_service import (
 console = Console()
 
 
-# 🔹 Reusable Banner Function ──────────────────────────────
+# 🖼️ Utility for rendering command banners ───────────────────────────────
 def render_command_banner(title: str, message: str):
     banner = Panel(
         Text(message, justify="left", style="bold yellow"),
@@ -42,7 +49,11 @@ def render_command_banner(title: str, message: str):
 )
 @click.pass_context
 def contract(ctx):
-    """📋 Contract Commands"""
+    """📋 Contract Commands
+
+    Group of commands for managing client contracts, including creation, updates,
+    filtering by status or user, and deletions.
+    """
 
     if ctx.invoked_subcommand:
         render_command_banner(
@@ -56,7 +67,7 @@ def contract(ctx):
 @contract.command(name="create")
 @role_required(["gestion", "commercial"])
 def create_contract():
-    """📝 Create a new contract (gestion only)."""
+    """📝 Create a new contract (gestion or commercial)."""
     render_command_banner("Create Contract", "Create and initialize a new event contract for a client.")
     create_contract_logic()
 
@@ -65,7 +76,7 @@ def create_contract():
 @contract.command(name="list")
 @role_required(["gestion", "commercial", "support"])
 def list_contracts():
-    """📋 List all contracts in the system."""
+    """📋 List all contracts in the system (visible to all roles)."""
     render_command_banner("List Contracts", "View all contracts regardless of status or assignment.")
     list_contracts_logic()
 
@@ -74,7 +85,7 @@ def list_contracts():
 @contract.command(name="list-my-contracts")
 @role_required(["commercial"])
 def list_my_contracts():
-    """📋 List contracts assigned to the logged-in commercial user only."""
+    """📋 List contracts assigned to the logged-in commercial user."""
     render_command_banner("My Contracts", "Display only the contracts assigned to your user account.")
     list_my_contracts_logic()
 
@@ -100,7 +111,7 @@ def list_contract_details():
 @contract.command(name="not-signed")
 @role_required(["gestion", "commercial", "support"])
 def list_not_signed():
-    """🔍 Show detailed information for a specific contract."""
+    """❗ List all contracts that are not signed."""
     render_command_banner("Contract Details",
                           "Display full contract information.")
     list_not_signed_contract_logic()
@@ -109,9 +120,10 @@ def list_not_signed():
 # 🔧 CLI Command: Update Contract ────────────────────────────
 @contract.command(name="update")
 @click.option("--contract-id", type=int, prompt="🔹 Enter the Contract ID to update")
+@attach_sentry_user
 @owner_required(Contract, owner_field="commercial_id", id_arg="contract_id")
 def update_contract(contract_id: int):
-    """🔧 Update a contract's information (only if you are the assigned commercial or part of 'gestion')."""
+    """🔧 Update a contract's status or details (owner or gestion only)."""
     render_command_banner("Update Contract", "Modify the payment status or terms of an existing contract.")
     update_contract_logic(contract_id)
 
@@ -120,7 +132,7 @@ def update_contract(contract_id: int):
 @contract.command(name="reassign")
 @role_required(["gestion"])
 def reassign_contract():
-    """🔄 Reassign a client or commercial to an existing contract (gestion only)."""
+    """🔄 Reassign client or commercial for a contract (gestion only)."""
     render_command_banner("Reassign Contract", "Reassign the client or commercial contact tied to a contract.")
     contract_id = click.prompt("🔹 Enter contract ID", type=int)
     reassign_contract_logic(contract_id)
