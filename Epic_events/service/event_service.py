@@ -71,8 +71,24 @@ def prompt_for_date(label, required=True):
 def create_event_logic():
     """📌 Create a new event and link it to a contract, client, and support user."""
     session = SessionLocal()
+    user = get_logged_in_user()
 
     try:
+        # 🔍 Validate Client
+        while True:
+            client_id = click.prompt("👤 Client ID", type=int)
+            client = session.query(Client).filter_by(client_id=client_id).first()
+            if not client:
+                console.print(f"[red]❌ No client found with ID {client_id}. Try again.[/red]")
+                continue
+
+            # 🔒 Authorization check for commercial
+            if user.role.value == "commercial" and client.commercial_id != user.user_id:
+                click.secho(f"📋 Client is assigned to commercial ID: {client.commercial_id}", fg="yellow")
+                click.secho(f"👤 Logged-in user ID: {user.user_id}", fg="yellow")
+                return
+            break
+
         event_name = click.prompt("📝 Enter the event name", type=str)
         start_date = prompt_for_date("📅 Event's Start Date")
         end_date = prompt_for_date("📅 Event's End Date")
@@ -85,15 +101,6 @@ def create_event_logic():
             support = session.query(User).filter_by(user_id=support_id, role="support").first()
             if not support:
                 console.print(f"[red]❌ No support user found with ID {support_id}. Try again.[/red]")
-                continue
-            break
-
-        # 🔍 Validate Client
-        while True:
-            client_id = click.prompt("👤 Client ID", type=int)
-            client = session.query(Client).filter_by(client_id=client_id).first()
-            if not client:
-                console.print(f"[red]❌ No client found with ID {client_id}. Try again.[/red]")
                 continue
             break
 

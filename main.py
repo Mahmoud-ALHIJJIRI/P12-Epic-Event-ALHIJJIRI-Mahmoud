@@ -9,6 +9,17 @@ from pyfiglet import Figlet
 from Epic_events.database import init_db
 from Epic_events.cli import cli
 
+# ─── 🌍 External Imports ───────────────────────────────────────────
+import sentry_sdk
+import os
+
+# 🔐 Initialize Sentry
+sentry_sdk.init(
+    dsn=os.getenv("SENTRY_DSN"),  # 🔐 Your DSN is securely loaded from .env
+    send_default_pii=True,        # 🛡️ Include user data (e.g., emails) if set
+    environment="production",     # 🌍 Useful to separate dev vs prod
+    traces_sample_rate=1.0        # ⚡ Optional: Enables performance monitoring
+)
 
 # ─── 🖥️ Console Setup ─────────────────────────────────────────────────
 console = Console()

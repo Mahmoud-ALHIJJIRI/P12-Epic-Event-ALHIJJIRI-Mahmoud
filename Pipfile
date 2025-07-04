@@ -15,6 +15,7 @@ alembic = "*"
 werkzeug = "*"
 rich-click = "*"
 pyfiglet = "*"
+sentry-sdk = "*"
 
 [dev-packages]
 

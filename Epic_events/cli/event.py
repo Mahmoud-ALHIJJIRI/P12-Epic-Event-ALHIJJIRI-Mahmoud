@@ -55,7 +55,7 @@ def event(ctx):
 
 # ─── 📝 Event Creation ──────────────────────────────
 @event.command(name="create")
-@role_required(["gestion"])
+@role_required(["gestion", "commercial"])
 def create():
     """📝 Create a new event (gestion only)."""
     render_command_banner("Create Event", "Create a new event for a client with a signed contract.")

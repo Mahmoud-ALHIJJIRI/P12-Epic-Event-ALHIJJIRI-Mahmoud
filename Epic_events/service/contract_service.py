@@ -125,6 +125,23 @@ def list_my_contracts_logic():
         session.close()
 
 
+def list_not_signed_contract_logic():
+    """List clients not signed."""
+    session = SessionLocal()
+
+    try:
+        contracts = session.query(Contract).filter(Contract.is_signed == "False").all()
+        if not contracts:
+            console.print("[yellow]⚠️ All Contracts are already singed.[/yellow]")
+            return
+        render_contracts_table(contracts, title=f"📋 Contracts not yet signed.")
+
+    except Exception as e:
+        console.print(f"[red]❌ Error: {e}[/red]")
+    finally:
+        session.close()
+
+
 # 📋 List Event's Details ──────────────────────────────────────────────
 def list_contract_details_logic():
     """📋 Display details for a single event by ID."""
@@ -189,8 +206,7 @@ def update_contract_logic(contract_id: int):
                 break
 
         while True:
-            amount_total = click.prompt("🤑 Total amount of the contract", default="",
-                                        show_default=False)
+            amount_total = click.prompt("🤑 Total amount of the contract", default="", show_default=False)
             if amount_total == "":
                 break
             if amount_total.isdigit():

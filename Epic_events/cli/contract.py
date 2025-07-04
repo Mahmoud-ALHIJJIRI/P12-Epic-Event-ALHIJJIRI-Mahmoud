@@ -17,6 +17,7 @@ from Epic_events.service.contract_service import (
     reassign_contract_logic,
     list_my_contracts_logic,
     list_contract_details_logic,
+    list_not_signed_contract_logic,
 )
 
 console = Console()
@@ -94,6 +95,15 @@ def list_contract_details():
     render_command_banner("Contract Details",
                           "Display full contract information.")
     list_contract_details_logic()
+
+
+@contract.command(name="not-signed")
+@role_required(["gestion", "commercial", "support"])
+def list_not_signed():
+    """🔍 Show detailed information for a specific contract."""
+    render_command_banner("Contract Details",
+                          "Display full contract information.")
+    list_not_signed_contract_logic()
 
 
 # 🔧 CLI Command: Update Contract ────────────────────────────
