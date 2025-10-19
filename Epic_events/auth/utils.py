@@ -7,6 +7,7 @@ This module handles local JWT token storage, loading, decoding, and user context
 
 # Import libraries
 import jwt
+from click import ClickException
 
 # Internal imports
 from pathlib import Path
@@ -48,7 +49,7 @@ def load_token() -> str:
     """
     # 📂 Check if token file exists
     if not TOKEN_FILE.exists():
-        raise Exception("❌ You are not logged in. Please login first.")
+        raise ClickException("❌ You are not logged in. Please login first.")
 
     # 📄 Read token from file and strip whitespace
     with open(TOKEN_FILE, "r", encoding="utf-8") as f:
@@ -56,7 +57,7 @@ def load_token() -> str:
 
     # 🚫 Raise error if token is empty
     if not token:
-        raise Exception("❌ Token is empty. Please login again.")
+        raise ClickException("❌ Token is empty. Please login again.")
 
     return token
 
@@ -83,10 +84,10 @@ def decode_token(token: str) -> dict:
         return payload
     except ExpiredSignatureError:
         # ⌛ Token expired
-        raise Exception("⚠️ Token expired. Please login again.")
+        raise ClickException("⚠️ Token expired. Please login again.")
     except InvalidTokenError as e:
         # ❗ Invalid token
-        raise Exception(f"❌ Invalid token: {str(e)}")
+        raise ClickException(f"❌ Invalid token: {str(e)}")
 
 
 # -------------------------

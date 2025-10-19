@@ -43,6 +43,9 @@ def main():
     # 📂 Initialize the database
     init_db()
 
+    # Use case for Sentry
+    """raise Exception("🔥 Test error for Sentry!")"""
+
     # ✅ Show styled startup success panel
     console.print(
         Panel.fit(

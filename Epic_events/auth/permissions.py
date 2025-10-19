@@ -33,6 +33,9 @@ def role_required(allowed_roles):
             try:
                 # 🧾 Retrieve the current user from token/session
                 user = get_current_user()
+                if not user:
+                    click.echo("❌ You are not logged in. Please login first.")
+                    return
                 # 🛂 Check if user's role is allowed
                 user_role = user.get("role")
                 if user_role not in allowed_roles:
